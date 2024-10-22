@@ -47,8 +47,8 @@ import simpsave as ss  # Import SimpSave with the alias ss
 name = 'Hello World'
 value = 'Hello World!'
 
-# Initialize SimpSave and write data
-ss.init([name], [value])
+# Initialize SimpSave and write data (auto convert to two list)
+ss.init(name, value)
 
 """
 The above code is equivalent to (if auto_init = True)
@@ -80,11 +80,11 @@ For more detailed function usage and explanations, check the library overview be
       print("SimpSave is ready!")
   ```
 
-#### `init(names: list[str] = [], values: list[str] = [], init_check: bool = False)`  
-- **Description**: Initializes SimpSave and can preset key-value pairs during creation.  
+#### `init(names: list[str] = [] or str, values: list[str] = [] or any, init_check: bool = False)`  
+- **Description**: Initializes SimpSave and can preset key-value pairs (if single key-value, auto convert) during creation.  
 - **Parameters**:  
-  - `names`: A list of strings representing key names.  
-  - `values`: A list of strings representing key values.  
+  - `names`: A list of strings (or single string) representing key names.  
+  - `values`: A list (or single value, if name is single string) of strings representing key values.  
   - `init_check`: If set to `True`, throws a `FileExistsError` if SimpSave already exists.  
 - **Returns**: `True` if initialization is successful.  
 - **Exceptions**:  

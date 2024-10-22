@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: simpsave
-Version: 0.10
+Version: 0.11
 Summary: A lightweight Python library for simple persistent storage using .ini files.
 Home-page: https://github.com/Water-Run/SimpSave
 Author: WaterRun

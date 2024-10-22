@@ -1,2 +1,3 @@
 import simpsave
-simpsave.init()
+if __name__ == '__main__':
+    ...

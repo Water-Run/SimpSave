@@ -1,0 +1,2 @@
+import simpsave
+simpsave.init()

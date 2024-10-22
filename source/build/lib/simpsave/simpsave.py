@@ -1,7 +1,7 @@
 """
 @file simpsave.py
 @author WaterRun
-@version 1.0
+@version 0.10
 @date 2024-10-22
 @description Source code for the SimpSave project
 """
@@ -28,8 +28,7 @@ def clear_ss() -> bool:
     """
     if not ready():
         raise FileNotFoundError(f"SimpSave has not been initialized: {SIMPSAVE_FILENAME} not found")
-    os.remove(SIMPSAVE_FILENAME)
-    return True
+    return os.remove(SIMPSAVE_FILENAME)
 
 def init(names: list[str] = [], values: list[str] = [], init_check = False) -> bool:
     """
@@ -45,7 +44,11 @@ def init(names: list[str] = [], values: list[str] = [], init_check = False) -> b
     """
     if ready() and init_check:
         raise FileExistsError(f"Init Check: SimpSave has already been initialized: {SIMPSAVE_FILENAME} exists")
-
+    
+    if isinstance(names, str): # auto convert
+        names = [names]
+        values = [values]
+        
     if not isinstance(names, list) or not isinstance(values, list):
         raise ValueError('Expected two lists for names and values')
 
@@ -70,6 +73,9 @@ def has(name: str) -> bool:
     if not ready():
         raise FileNotFoundError(f"SimpSave has not been initialized: {SIMPSAVE_FILENAME} not found")
 
+    if not isinstance(name, str):
+        raise TypeError(f"The name must be string: {name}")
+    
     config = configparser.ConfigParser()
     config.read(SIMPSAVE_FILENAME, encoding='utf-8')
     return config.has_section(name)
@@ -87,6 +93,9 @@ def read(name: str) -> any:
     if not ready():
         raise FileNotFoundError(f"SimpSave has not been initialized: {SIMPSAVE_FILENAME} not found")
 
+    if not isinstance(name, str):
+        raise TypeError(f"The name must be string: {name}")
+    
     config = configparser.ConfigParser()
     config.read(SIMPSAVE_FILENAME, encoding='utf-8')
 
@@ -125,6 +134,9 @@ def write(name: str, value: any, overwrite=True, auto_init=True, type_check=True
     elif not ready():
         raise FileNotFoundError(f"SimpSave has not been initialized: {SIMPSAVE_FILENAME} not found")
 
+    if not isinstance(name, str):
+        raise TypeError(f"The name must be string: {name}")
+    
     config = configparser.ConfigParser()
     config.read(SIMPSAVE_FILENAME, encoding='utf-8')
 
@@ -166,6 +178,9 @@ def remove(name: str) -> bool:
     if not ready():
         raise FileNotFoundError(f"SimpSave has not been initialized: {SIMPSAVE_FILENAME} not found")
 
+    if not isinstance(name, str):
+        raise TypeError(f"The name must be string: {name}")
+    
     config = configparser.ConfigParser()
     config.read(SIMPSAVE_FILENAME, encoding='utf-8')
     return config.remove_section(name)

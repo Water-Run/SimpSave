@@ -1,7 +1,7 @@
 """
 @file simpsave.py
 @author WaterRun
-@version 1.1
+@version 0.10
 @date 2024-10-22
 @description Source code for the SimpSave project
 """
@@ -30,7 +30,7 @@ def clear_ss() -> bool:
         raise FileNotFoundError(f"SimpSave has not been initialized: {SIMPSAVE_FILENAME} not found")
     return os.remove(SIMPSAVE_FILENAME)
 
-def init(names: list[str] = [] or str, values: list[str] = [] or any, init_check = False) -> bool:
+def init(names: list[str] = [], values: list[str] = [], init_check = False) -> bool:
     """
     Initialize SimpSave by creating the INI file and writing preset data.
     

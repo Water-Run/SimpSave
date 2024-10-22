@@ -1,134 +1,171 @@
 """
 @file simpsave.py
 @author WaterRun
-@version 0.9
-@description SimpSave项目源码
+@version 1.0
+@date 2024-10-21
+@description Source code for the SimpSave project
 """
 
 import os
 import configparser
 
-r"""
-SIMPSAVE_FILENAME: 用于存储SimpSave的INI文件名,默认为'__ss__.ini'
-"""
-SIMPSAVE_FILENAME = '__ss__' + '.ini' # 更改时只更改第一个字符串
-        
+SIMPSAVE_FILENAME = '__ss__.ini'  # Default filename for the SimpSave INI file
+
 def ready() -> bool:
-    r"""
-    通过INI文件存在与否判断SimpSave是否可用
-    @return 存在与否
+    """
+    Check if the SimpSave INI file exists.
+    
+    :return: True if the file exists, False otherwise.
     """
     return os.path.exists(SIMPSAVE_FILENAME)
 
 def clear_ss() -> bool:
-    r"""
-    在目录下删除SimpSave的INI文件 
-    @return 删除情况
+    """
+    Delete the SimpSave INI file in the current directory.
+    
+    :return: True if the file was successfully deleted, False otherwise.
+    :raises FileNotFoundError: If the INI file does not exist.
     """
     if not ready():
-        raise FileNotFoundError(f"The SimpSave has not been initilaized: {SIMPSAVE_FILENAME} not found")
-    return os.remove(SIMPSAVE_FILENAME)
+        raise FileNotFoundError(f"SimpSave has not been initialized: {SIMPSAVE_FILENAME} not found")
+    os.remove(SIMPSAVE_FILENAME)
+    return True
 
-def init(names:list[str], values:list[str]) -> bool:
-    r"""
-    初始化SimpSave:创建INI文件并写入的预设数据(names和values一一对应写入).
-    @param names: 待写入的预设名称列表
-    @param values: 待写入的预设值列表
-    @return 初始化成功与否
+def init(names: list[str] = [], values: list[str] = [], init_check = False) -> bool:
     """
-    if ready():
-        raise FileExistsError(f"SimpSave has been initilaized:{SIMPSAVE_FILENAME} already exists")
-    else:
-        if len(names) != len(values):
-            raise IndexError(f"The length of name list and value list must be equal ({len(names)}:{len(values)})")
-        with open(SIMPSAVE_FILENAME, 'w', encoding='utf-8') as file:
-            file.write('')
-            for name,value in zip(names, values):
-                if not write(name, value, overwrite=False,auto_init=True):
-                    return False
-        return True
+    Initialize SimpSave by creating the INI file and writing preset data.
     
+    :param names: List of keys to be written.
+    :param values: List of corresponding values to be written.
+    :param init_check: If True, raise FileExistsError while .ini exists.
+    :return: True if initialization was successful, False otherwise.
+    :raises FileExistsError: If the INI file already exists.
+    :raises ValueError: If `names` or `values` are not lists.
+    :raises IndexError: If the lengths of `names` and `values` do not match.
+    """
+    if ready() and init_check:
+        raise FileExistsError(f"Init Check: SimpSave has already been initialized: {SIMPSAVE_FILENAME} exists")
+
+    if not isinstance(names, list) or not isinstance(values, list):
+        raise ValueError('Expected two lists for names and values')
+
+    if len(names) != len(values):
+        raise IndexError(f"Length of names and values must be equal (names: {len(names)}, values: {len(values)})")
+
+    with open(SIMPSAVE_FILENAME, 'w', encoding='utf-8') as file:
+        file.write('')
+        for name, value in zip(names, values):
+            if not write(name, value, overwrite=False, auto_init=True):
+                return False
+    return True
+
 def has(name: str) -> bool:
-    r"""
-    @param name: 待查找的名称
-    @return 存在与否
+    """
+    Check if a section with the given name exists in the INI file.
+    
+    :param name: The section name to check.
+    :return: True if the section exists, False otherwise.
+    :raises FileNotFoundError: If the INI file does not exist.
     """
     if not ready():
-        raise FileNotFoundError(f"The SimpSave has not been initilaized: {SIMPSAVE_FILENAME} not found")
+        raise FileNotFoundError(f"SimpSave has not been initialized: {SIMPSAVE_FILENAME} not found")
+
     config = configparser.ConfigParser()
-    config.read(SIMPSAVE_FILENAME,encoding='utf-8')
-    
+    config.read(SIMPSAVE_FILENAME, encoding='utf-8')
     return config.has_section(name)
 
 def read(name: str) -> any:
-    r"""
-    读取匹配指定名称的单元并返回其的值
-    @param name: 待读取的名称
-    @return 查找到的Unit
+    """
+    Read and return the value associated with the given section name.
+    
+    :param name: The section name to read.
+    :return: The value of the specified section.
+    :raises FileNotFoundError: If the INI file does not exist.
+    :raises KeyError: If the section does not exist.
+    :raises TypeError: If the value's type is not supported.
     """
     if not ready():
-        raise FileNotFoundError(f"The SimpSave has not been initilaized: {SIMPSAVE_FILENAME} not found")
+        raise FileNotFoundError(f"SimpSave has not been initialized: {SIMPSAVE_FILENAME} not found")
+
     config = configparser.ConfigParser()
-    config.read(SIMPSAVE_FILENAME,encoding='utf-8')
-    
+    config.read(SIMPSAVE_FILENAME, encoding='utf-8')
+
     if name not in config:
         raise KeyError(f"Section {name} not found")
-    
+
     section = config[name]
-    type = section['type']
-    value = section['value']
-    
-    support_types = ('int','float','bool','str','list','tuple','dict') # SimpSave only support basic types of python
-    if type in support_types:
-        value = eval(f"{type}({value})")
-    else:
-        raise TypeError(f"SimpSave only support types in {support_types}")
-    
-    return value
-    
-def write(name:str, value:any, overwrite=True, auto_init = True, type_check = True) -> bool:
-    r"""
-    写入指定值至指定名称中
-    @param name: 写入的目标名称
-    @param value: 待写入的值
-    @param overwrite: 覆写开关(False下,将阻止已存在名称的再写入)
-    @param auto_init: 自动初始化SimpSave开关(开启后,则在SimpSave未初始化的前提下自动初始化并写入指定数据)
-    @return 写入情况
+    type_str = section['type']
+    value_str = section['value']
+
+    supported_types = ('int', 'float', 'bool', 'str', 'list', 'tuple', 'dict')
+    if type_str not in supported_types:
+        raise TypeError(f"SimpSave only supports types in {supported_types}")
+
+    if type_str == 'str':
+        return value_str
+    return eval(f"{type_str}({value_str})")
+
+def write(name: str, value: any, overwrite=True, auto_init=True, type_check=True, convert_unsupported=False) -> bool:
     """
-    if (not ready()) and auto_init:
+    Write a value to a section with the specified name.
+    
+    :param name: The section name to write to.
+    :param value: The value to write.
+    :param overwrite: If False, prevents overwriting existing sections.
+    :param auto_init: Automatically initializes SimpSave if not already initialized.
+    :param type_check: Ensures type consistency with existing sections.
+    :param convert_unsupported: If True, unsupported types are converted to strings.
+    :return: True if the write was successful, False otherwise.
+    :raises FileNotFoundError: If the INI file does not exist.
+    :raises KeyError: If overwrite is disabled and the section already exists.
+    :raises TypeError: If the value's type is not supported or does not match existing data type.
+    """
+    if not ready() and auto_init:
         init()
     elif not ready():
-        raise FileNotFoundError(f"The SimpSave has not been initilaized: {SIMPSAVE_FILENAME} not found")
-        
+        raise FileNotFoundError(f"SimpSave has not been initialized: {SIMPSAVE_FILENAME} not found")
+
     config = configparser.ConfigParser()
-    config.read(SIMPSAVE_FILENAME,encoding='utf-8')
-    
+    config.read(SIMPSAVE_FILENAME, encoding='utf-8')
+
     if not overwrite and has(name):
-        raise KeyError(f"Overwrite Check Enabled: Section {name} already exists")
+        raise KeyError(f"Overwrite disabled: Section {name} already exists")
     
-    if type_check and has(name) and type(old_value := read(name)) != type(value) :
-        raise TypeError(f'Type Check Enabled: The Type of new Unit is {type(value).__name__}, while the old one is {type(old_value).__name__}')
-    
+    supported_types = ('int', 'float', 'bool', 'str', 'list', 'tuple', 'dict')
+    value_type = type(value).__name__
+
+    if value_type not in supported_types:
+        if convert_unsupported:
+            value = str(value)
+        else:
+            raise TypeError(f"SimpSave only supports types in {supported_types}")
+
+    if type_check and has(name):
+        old_value = read(name)
+        if type(old_value) != type(value):
+            raise TypeError(f"Type mismatch: {value_type} given, but {type(old_value).__name__} expected")
+
     config[name] = {
-        'type': type(value).__name__,
+        'type': value_type,
         'value': str(value)
     }
-    
+
     with open(SIMPSAVE_FILENAME, 'w', encoding='utf-8') as configfile:
         config.write(configfile)
-    
+
     return True
 
 def remove(name: str) -> bool:
-    r"""
-    删除存储的指定名称的项
-    @param name: 待删除的名称
-    @return 删除情况
+    """
+    Remove a section with the specified name from the INI file.
+    
+    :param name: The section name to remove.
+    :return: True if the section was successfully removed, False otherwise.
+    :raises FileNotFoundError: If the INI file does not exist.
     """
     if not ready():
-        raise FileNotFoundError(f"The SimpSave has not been initilaized: {SIMPSAVE_FILENAME} not found")
-    
+        raise FileNotFoundError(f"SimpSave has not been initialized: {SIMPSAVE_FILENAME} not found")
+
     config = configparser.ConfigParser()
-    config.read(SIMPSAVE_FILENAME,encoding='utf-8')
-    
+    config.read(SIMPSAVE_FILENAME, encoding='utf-8')
     return config.remove_section(name)

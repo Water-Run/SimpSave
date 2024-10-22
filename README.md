@@ -1,14 +1,13 @@
-# SimpSave: 简单的持续化存储你的Python变量  
-SimpSave是一个开源的,非常简单的库,利用`.ini`文件实现对基本类型变量的持久化存储.  
-使用`pip`安装SimpSave:  
+# SimpSave: Simple Persistent Storage for Your Python Variables  
+SimpSave is an open-source, very simple library that uses `.ini` files to achieve persistent storage for basic type variables.  
+Install SimpSave using `pip`:
 ```bash
 pip install simpsave
 ```
-随后,在你的项目中导入simpsave(通常以'ss'作别名),开始使用.  
+Then, import simpsave in your project (commonly aliased as 'ss') and start using it:
 ```python
 import simpsave as ss
 ```
-你可以进入详细教程进行进一步的了解:
-[详细教程](./source/README.md)  
-在`demo`目录下,提供了几个示例程序,你可以尝试以更好的对simpsave进行认识.  
-> 项目开发中  
+You can check the detailed tutorial for more information:
+[Detailed Tutorial](./source/README.md)  
+In the `demo` directory, there are several example programs available for you to try out and better understand how simpsave works.  

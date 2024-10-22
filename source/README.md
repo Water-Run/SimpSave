@@ -1,59 +1,169 @@
-# SimpSave     
-## 简介  
-SimpSave就如其名,是一个提供简单的将变量持久化的功能的极轻量Python库.很适合在如学生作业等小型脚本使用.  
-SimpSave具备以下特点:  
-- 极其简单:项目只有不到200行代码构成  
-- 极易上手:使用极其容易,(在很大程度上)不需要看任何教程即可在1分钟内学会使用  
+# SimpSave
 
-> 项目已发布于PyPi      
-## 使用  
-#### 安装  
-- 使用pip安装  
-```bash
-pip install simpsave
+## Introduction  
+As the name suggests, SimpSave is an extremely lightweight Python library that provides a simple solution for variable persistence. It is particularly suitable for use in small scripts or student projects.
+
+SimpSave offers the following features:  
+- **Extremely Simple**: The project has less than 200 lines of code, making it easy to understand and use quickly.
+- **Easy to Learn**: It requires only basic Python knowledge, with no need for complex tutorials. In most cases, users can learn to use the library within a minute.
+
+> The project has been published on PyPi.
+
+## Usage Guide  
+
+### Installation  
+- Install SimpSave via `pip`:  
+  ```bash
+  pip install simpsave
+  ```
+
+- Import SimpSave into your code (usually as `ss`):  
+  ```python
+  import simpsave as ss
+  ```
+
+### Basic Concepts  
+SimpSave supports the persistent storage of basic Python data types, including `int`, `float`, `bool`, `str`, as well as `list`, `tuple`, and `dict`. It provides basic operations like create, read, update, and delete.  
+> For non-basic types, if the object implements a `__str__()` method, you can set the `convert_unsupported` parameter to `True` to store it as a string.
+
+SimpSave’s methods make it easy to achieve data persistence. First, you need to check if SimpSave is ready (i.e., if the `.ini` file exists). If not, you need to initialize it:  
+- Use `ss.ready()` to check if SimpSave is ready (i.e., if the `.ini` file exists).
+- If not initialized, use the `ss.init()` method to initialize it. You can pass in `names` and `values` lists to set initial key-value pairs. The two lists must correspond one-to-one and have the same length.
+
+SimpSave provides the following core functionalities:  
+- `write()` to write data into the `.ini` file.
+- `read()` to read stored data.
+- `remove()` to delete specific data.
+- `has()` to check if a specific key exists.
+- `clear_ss()` to clear SimpSave by deleting the `.ini` file.
+
+By default, SimpSave uses `__ss__.ini` as the storage file name, but you can change the file name by modifying the global variable `SIMPSAVE_FILENAME`.
+
+Here’s a simple code example:  
+```python
+import simpsave as ss  # Import SimpSave with the alias ss
+
+# Prepare data
+name = 'Hello World'
+value = 'Hello World!'
+
+# Initialize SimpSave and write data
+ss.init([name], [value])
+
+"""
+The above code is equivalent to (if auto_init = True)
+ss.write(name, value)
+"""
+
+# Read and print the stored value
+print(ss.read(name))  # Output: Hello World!
 ```
-- 在你的代码中导入库(一般简称为ss)
-```python
-import simpsave as ss
-... # your code
-```  
-#### 基本概念  
-SimpSave支持持久化存储Python的基本类型值.  
-SimpSave将待存储及读出的数据封装到类`Unit`中.其构造需要两个参数:***name*** `str` 和***value*** `any`.  
-在一切开始之前,我们需要使用`ready`方法来进行判断SimpSave是否已就绪.如果没有(初次使用),使用`init`方法进行初始化已就绪.  
-使用提供的`write`,`read`及`remove`方法,实现对数据的增删查改.  
-以下提供简单的代码示例:  
-```python
-import simpsave as ss # 以ss为别名导入simpsave
 
-# 创建一个SimpSave Unit first ss unit, 其值为Hello World!
-a = ss.Unit("first ss unit","Hello World!")
+The name of a SimpSave storage unit can be any string, but ensure uniqueness to avoid conflicts.
 
-# 将a写入文件,进行持久化储存.(auto_init会自动的创建.ini文件)
-ss.write(a)
+For more detailed function usage and explanations, check the library overview below. You can also visit the GitHub project page to download sample code and explore this simple, easy-to-use library further.
 
-# 读取名称为a的值,并打印
-print(ss.read(a.get_name()))
-```   
-SimpSave单元的名称可以是任何字符串.不过,需要确保名称的唯一性.  
-关于SimpSave方法的具体使用及其他方法,见下一小节.  
-另在GitHub上,提供了一些示例程序.可以下载已进一步了解这个简单的库.  
+## Library Overview  
 
-#### 库概览     
-1. 变量  
-- `SIMPSAVE_FILENAME`:`str`类型,控制用于存储的INI文件的名称.修改时注意包含`.ini`后缀.   
-2. 类  
-- `Unit`: SimpSave的存储单元.构造时,需要属性`name`(单元的名称,`str`),`value`(单元的值,`any`(Python的基本类型)).自动创建属性`type`用于存储当前类型.  
-提供以下方法:
-`get_name()`: 返回单元名称 `str` 
-`get_value()`: 返回单元的值 `any`    
-`get_type()`: 返回单元的类型 `type`  
-`rename(name: str)`:  重命名为新名称 
-`reset(value: any)`:  重设单元的值为新值  
-> 建议使用提供的`rename`和`reset`方法而不是直接修改属性避免类型错误  
+### 1. Variables  
+- `SIMPSAVE_FILENAME`: A `str` type variable, defaulting to `__ss__.ini`, controls the name of the `.ini` file used for storage. Make sure to include the `.ini` suffix when modifying this variable.
 
-另外,实现了`__str__`方法,可以直接转换为字符串(使用`print`打印时很有用).      
-3. 函数  
+### 2. Functions  
 
-## 实现  
-SimpSave的实现基于在项目目录下创建指定名称的`.ini`文件.  
+#### `ready()`  
+- **Description**: Checks whether SimpSave is initialized, i.e., whether the `.ini` file exists.  
+- **Returns**: `True` if the file exists, `False` if it does not.  
+- **Exceptions**: None.  
+- **Example**:  
+  ```python
+  if ss.ready():
+      print("SimpSave is ready!")
+  ```
+
+#### `init(names: list[str] = [], values: list[str] = [], init_check: bool = False)`  
+- **Description**: Initializes SimpSave and can preset key-value pairs during creation.  
+- **Parameters**:  
+  - `names`: A list of strings representing key names.  
+  - `values`: A list of strings representing key values.  
+  - `init_check`: If set to `True`, throws a `FileExistsError` if SimpSave already exists.  
+- **Returns**: `True` if initialization is successful.  
+- **Exceptions**:  
+  - `FileExistsError`: If the `.ini` file already exists and `init_check` is `True`.  
+  - `ValueError`: If `names` and `values` are not lists.  
+  - `IndexError`: If the `names` and `values` lists have different lengths.  
+- **Example**:  
+  ```python
+  ss.init(['key1'], ['value1'])
+  ```
+
+#### `write(name: str, value: any, overwrite: bool = True, auto_init: bool = True, type_check: bool = True, convert_unsupported: bool = False)`  
+- **Description**: Writes the specified key-value pair into SimpSave.  
+- **Parameters**:  
+  - `name`: The key name (string).  
+  - `value`: The value (any supported type).  
+  - `overwrite`: If set to `False`, throws a `KeyError` if the key already exists.  
+  - `auto_init`: Automatically initializes if the `.ini` file does not exist.  
+  - `type_check`: Checks type consistency and throws a `TypeError` if inconsistent.  
+  - `convert_unsupported`: Whether to automatically convert unsupported types to strings.  
+- **Returns**: `True` if the write is successful.  
+- **Exceptions**:  
+  - `FileNotFoundError`: If the `.ini` file does not exist and `auto_init` is `False`.  
+  - `KeyError`: If `overwrite` is `False` and the key already exists.  
+  - `TypeError`: If the type is unsupported or inconsistent with the existing key’s value.  
+- **Example**:  
+  ```python
+  ss.write('my_key', 123)
+  ```
+
+#### `read(name: str)`  
+- **Description**: Reads the value associated with the specified key.  
+- **Parameters**:  
+  - `name`: The key name to read.  
+- **Returns**: The value associated with the key.  
+- **Exceptions**:  
+  - `FileNotFoundError`: If the `.ini` file does not exist.  
+  - `KeyError`: If the key does not exist.  
+  - `TypeError`: If the value type is unsupported.  
+- **Example**:  
+  ```python
+  value = ss.read('my_key')
+  ```
+
+#### `has(name: str)`  
+- **Description**: Checks whether a specific key exists.  
+- **Parameters**:  
+  - `name`: The key name to check.  
+- **Returns**: `True` if the key exists, `False` if it does not.  
+- **Exceptions**:  
+  - `FileNotFoundError`: If the `.ini` file does not exist.  
+- **Example**:  
+  ```python
+  if ss.has('my_key'):
+      print("Key exists!")
+  ```
+
+#### `remove(name: str)`  
+- **Description**: Removes the specified key and its value.  
+- **Parameters**:  
+  - `name`: The key name to remove.  
+- **Returns**: `True` if the removal is successful.  
+- **Exceptions**:  
+  - `FileNotFoundError`: If the `.ini` file does not exist.  
+- **Example**:  
+  ```python
+  ss.remove('my_key')
+  ```
+
+#### `clear_ss()`  
+- **Description**: Clears SimpSave by deleting the `.ini` file.  
+- **Returns**: `True` if the deletion is successful.  
+- **Exceptions**:  
+  - `FileNotFoundError`: If the `.ini` file does not exist.  
+- **Example**:  
+  ```python
+  ss.clear_ss()
+  ```  
+### Implementation
+
+The core of SimpSave is built upon Python's `configparser` module, using an `.ini` file for persistent data storage. It manages Python's basic data types in a key-value pair format and supports simple data read/write operations.  
+SimpSave is designed to be simple, lightweight, and easy to use, making it well-suited for small-scale projects, especially for student assignments.

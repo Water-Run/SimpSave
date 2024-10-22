@@ -1,0 +1,9 @@
+LICENSE
+README.md
+setup.py
+simpsave.egg-info/PKG-INFO
+simpsave.egg-info/SOURCES.txt
+simpsave.egg-info/dependency_links.txt
+simpsave.egg-info/top_level.txt
+ss/__init__.py
+ss/simpsave.py

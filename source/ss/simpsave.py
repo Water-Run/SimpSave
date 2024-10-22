@@ -12,36 +12,6 @@ r"""
 SIMPSAVE_FILENAME: 用于存储SimpSave的INI文件名,默认为'__ss__.ini'
 """
 SIMPSAVE_FILENAME = '__ss__' + '.ini' # 更改时只更改第一个字符串
-
-class Unit:
-    r"""
-    封装写入及读取单元
-    @param name: 待存储的名称
-    @param type: 待存储的值
-    """
-    def __init__(self, name:str, value: any):
-        self.name = str(name)
-        self.value = value
-        self.type = type(value)
-        
-    def __str__(self):
-        return f"--SimpSave Unit Info--\nname: {self.name}\ntype: {self.type.__name__}\nvalue: {str(self.value)}"
-    
-    def get_name(self):
-        return self.name
-    
-    def get_value(self):
-        return self.value
-    
-    def get_type(self):
-        return self.type
-    
-    def rename(self,new_name: str):
-        self.name = str(new_name)
-    
-    def reset(self,value: any):
-        self.value = value
-        self.type = type(value)
         
 def ready() -> bool:
     r"""
@@ -59,19 +29,22 @@ def clear_ss() -> bool:
         raise FileNotFoundError(f"The SimpSave has not been initilaized: {SIMPSAVE_FILENAME} not found")
     return os.remove(SIMPSAVE_FILENAME)
 
-def init(Units:list[Unit] = []) -> bool:
+def init(names:list[str], values:list[str]) -> bool:
     r"""
-    初始化SimpSave:创建INI文件并写入的预设数据(names和Units一一对应写入).
-    @param Units: 待写入的预设Unit列表
+    初始化SimpSave:创建INI文件并写入的预设数据(names和values一一对应写入).
+    @param names: 待写入的预设名称列表
+    @param values: 待写入的预设值列表
     @return 初始化成功与否
     """
     if ready():
         raise FileExistsError(f"SimpSave has been initilaized:{SIMPSAVE_FILENAME} already exists")
     else:
+        if len(names) != len(values):
+            raise IndexError(f"The length of name list and value list must be equal ({len(names)}:{len(values)})")
         with open(SIMPSAVE_FILENAME, 'w', encoding='utf-8') as file:
             file.write('')
-            for Unit in Units:
-                if not write(Unit,overwrite=False,auto_init=True):
+            for name,value in zip(names, values):
+                if not write(name, value, overwrite=False,auto_init=True):
                     return False
         return True
     
@@ -87,9 +60,9 @@ def has(name: str) -> bool:
     
     return config.has_section(name)
 
-def read(name: str) -> Unit:
+def read(name: str) -> any:
     r"""
-    读取匹配指定名称的单元并生成Unit
+    读取匹配指定名称的单元并返回其的值
     @param name: 待读取的名称
     @return 查找到的Unit
     """
@@ -111,13 +84,13 @@ def read(name: str) -> Unit:
     else:
         raise TypeError(f"SimpSave only support types in {support_types}")
     
-    return Unit(value)
+    return value
     
-def write(Unit: Unit, overwrite=True, auto_init = True, type_check = True) -> bool:
+def write(name:str, value:any, overwrite=True, auto_init = True, type_check = True) -> bool:
     r"""
-    写入指定Unit至指定名称中
+    写入指定值至指定名称中
     @param name: 写入的目标名称
-    @param Unit: 待写入的Unit
+    @param value: 待写入的值
     @param overwrite: 覆写开关(False下,将阻止已存在名称的再写入)
     @param auto_init: 自动初始化SimpSave开关(开启后,则在SimpSave未初始化的前提下自动初始化并写入指定数据)
     @return 写入情况
@@ -130,15 +103,15 @@ def write(Unit: Unit, overwrite=True, auto_init = True, type_check = True) -> bo
     config = configparser.ConfigParser()
     config.read(SIMPSAVE_FILENAME,encoding='utf-8')
     
-    if not overwrite and has(Unit.get_name()):
-        raise KeyError(f"Overwrite Check Enabled: Section {Unit.get_name()} already exists")
+    if not overwrite and has(name):
+        raise KeyError(f"Overwrite Check Enabled: Section {name} already exists")
     
-    if type_check and has(Unit.get_name()) and (check_Unit := read(Unit.get_name())).get_type() != Unit.get_type():
-        raise TypeError(f'Type Check Enabled: The Type of new Unit is {Unit.get_type().__name__}, while the old one is {check_Unit.get_type().__name__}')
+    if type_check and has(name) and type(old_value := read(name)) != type(value) :
+        raise TypeError(f'Type Check Enabled: The Type of new Unit is {type(value).__name__}, while the old one is {type(old_value).__name__}')
     
-    config[Unit.get_name()] = {
-        'type': Unit.get_type().__name__,
-        'value': str(Unit.get_value())
+    config[name] = {
+        'type': type(value).__name__,
+        'value': str(value)
     }
     
     with open(SIMPSAVE_FILENAME, 'w', encoding='utf-8') as configfile:

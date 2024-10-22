@@ -109,7 +109,7 @@ For more detailed function usage and explanations, check the library overview be
 - **Exceptions**:  
   - `FileNotFoundError`: If the `.ini` file does not exist and `auto_init` is `False`.  
   - `KeyError`: If `overwrite` is `False` and the key already exists.  
-  - `TypeError`: If the type is unsupported or inconsistent with the existing key’s value.  
+  - `TypeError`: If the type is unsupported or inconsistent with the existing key’s value, or input name isn't string.
 - **Example**:  
   ```python
   ss.write('my_key', 123)
@@ -123,7 +123,7 @@ For more detailed function usage and explanations, check the library overview be
 - **Exceptions**:  
   - `FileNotFoundError`: If the `.ini` file does not exist.  
   - `KeyError`: If the key does not exist.  
-  - `TypeError`: If the value type is unsupported.  
+  - `TypeError`: If the value type is unsupported, or input name isn't string.  
 - **Example**:  
   ```python
   value = ss.read('my_key')
@@ -136,6 +136,7 @@ For more detailed function usage and explanations, check the library overview be
 - **Returns**: `True` if the key exists, `False` if it does not.  
 - **Exceptions**:  
   - `FileNotFoundError`: If the `.ini` file does not exist.  
+  - `TypeError`: If the input name isn't string.s
 - **Example**:  
   ```python
   if ss.has('my_key'):
@@ -149,6 +150,8 @@ For more detailed function usage and explanations, check the library overview be
 - **Returns**: `True` if the removal is successful.  
 - **Exceptions**:  
   - `FileNotFoundError`: If the `.ini` file does not exist.  
+  - `KeyError`: If the key does not exist.  
+  - `TypeError`: If the input name isn't string.
 - **Example**:  
   ```python
   ss.remove('my_key')

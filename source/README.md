@@ -63,110 +63,98 @@ The name of a SimpSave storage unit can be any string, but ensure uniqueness to 
 
 For more detailed function usage and explanations, check the library overview below. You can also visit the GitHub project page to download sample code and explore this simple, easy-to-use library further.
 
-## Library Overview  
+### Library Overview  
 
-### 1. Variables  
-- `SIMPSAVE_FILENAME`: A `str` type variable, defaulting to `__ss__.ini`, controls the name of the `.ini` file used for storage. Make sure to include the `.ini` suffix when modifying this variable.
+#### 1. Variables  
+- **`SIMPSAVE_FILENAME`**: A string variable that defaults to `__ss__.ini`, controlling the name of the file used for storage. Make sure to include the `.ini` suffix if you modify this variable.
 
-### 2. Functions  
+#### 2. Functions  
 
-#### `ready()`  
-- **Description**: Checks whether SimpSave is initialized, i.e., whether the `.ini` file exists.  
-- **Returns**: `True` if the file exists, `False` if it does not.  
+##### `ready()`  
+- **Description**: Checks if SimpSave is initialized by verifying the existence of the `.ini` file.  
+- **Returns**: `True` if the file exists, `False` otherwise.  
 - **Exceptions**: None.  
 - **Example**:  
-  ```python
-  if ss.ready():
-      print("SimpSave is ready!")
-  ```
 
-#### `init(names: list[str] = [] or str, values: list[str] = [] or any, init_check: bool = False)`  
-- **Description**: Initializes SimpSave and can preset key-value pairs (if single key-value, auto convert) during creation.  
+```python
+if ss.ready():
+    print("SimpSave is ready!")
+```
+
+##### `init(names: Union[list[str], str] = [], values: Union[list[Any], Any] = [], init_check: bool = False)`  
+- **Description**: Initializes SimpSave and writes key-value pairs if provided. Handles both single key-value pairs and lists.  
 - **Parameters**:  
-  - `names`: A list of strings (or single string) representing key names.  
-  - `values`: A list (or single value, if name is single string) of strings representing key values.  
-  - `init_check`: If set to `True`, throws a `FileExistsError` if SimpSave already exists.  
-- **Returns**: `True` if initialization is successful.  
+  - `names`: A list of strings or a single string representing the key(s).  
+  - `values`: A list of values or a single value corresponding to the key(s).  
+  - `init_check`: If set to `True`, raises a `FileExistsError` if SimpSave already exists.  
+- **Returns**: `True` if initialization succeeds.  
 - **Exceptions**:  
-  - `FileExistsError`: If the `.ini` file already exists and `init_check` is `True`.  
-  - `ValueError`: If `names` and `values` are not lists.  
-  - `IndexError`: If the `names` and `values` lists have different lengths.  
+  - `FileExistsError`: If the `.ini` file exists and `init_check` is `True`.  
+  - `ValueError`: If `names` and `values` are not lists or their lengths don't match.  
 - **Example**:  
-  ```python
-  ss.init(['key1'], ['value1'])
-  ```
 
-#### `write(name: str, value: any, overwrite: bool = True, auto_init: bool = True, type_check: bool = True, convert_unsupported: bool = False)`  
-- **Description**: Writes the specified key-value pair into SimpSave.  
+```python
+ss.init(['key1'], ['value1'])
+```
+
+##### `write(names: Union[str, list[str]], values: Union[Any, list[Any]], overwrite: bool = True, auto_init: bool = True, type_check: bool = True, convert_unsupported: bool = False)`  
+- **Description**: Writes key-value pairs to SimpSave, with options for overwriting, automatic initialization, and type checking.  
 - **Parameters**:  
-  - `name`: The key name (string).  
-  - `value`: The value (any supported type).  
-  - `overwrite`: If set to `False`, throws a `KeyError` if the key already exists.  
-  - `auto_init`: Automatically initializes if the `.ini` file does not exist.  
-  - `type_check`: Checks type consistency and throws a `TypeError` if inconsistent.  
-  - `convert_unsupported`: Whether to automatically convert unsupported types to strings.  
-- **Returns**: `True` if the write is successful.  
+  - `names`: Key name(s) (string or list of strings).  
+  - `values`: Corresponding value(s) (any supported type).  
+  - `overwrite`: If set to `False`, raises a `KeyError` if the key already exists.  
+  - `auto_init`: Initializes SimpSave if it does not already exist.  
+  - `type_check`: Checks for type consistency with existing data.  
+  - `convert_unsupported`: If `True`, converts unsupported types to strings.  
+- **Returns**: `True` if the write succeeds.  
 - **Exceptions**:  
-  - `FileNotFoundError`: If the `.ini` file does not exist and `auto_init` is `False`.  
-  - `KeyError`: If `overwrite` is `False` and the key already exists.  
-  - `TypeError`: If the type is unsupported or inconsistent with the existing key’s value, or input name isn't string.
+  - `FileNotFoundError`: If SimpSave doesn't exist and `auto_init` is `False`.  
+  - `KeyError`: If overwriting is disabled and the key exists.  
+  - `TypeError`: If value types are unsupported or inconsistent.  
 - **Example**:  
-  ```python
-  ss.write('my_key', 123)
-  ```
 
-#### `read(name: str)`  
-- **Description**: Reads the value associated with the specified key.  
+```python
+ss.write('my_key', 123)
+```
+
+##### `read(names: Union[str, list[str]])`  
+- **Description**: Reads the value(s) associated with the specified key(s).  
 - **Parameters**:  
-  - `name`: The key name to read.  
-- **Returns**: The value associated with the key.  
+  - `names`: The key(s) to read (string or list of strings).  
+- **Returns**: The value(s) associated with the key(s).  
 - **Exceptions**:  
-  - `FileNotFoundError`: If the `.ini` file does not exist.  
-  - `KeyError`: If the key does not exist.  
-  - `TypeError`: If the value type is unsupported, or input name isn't string.  
+  - `FileNotFoundError`: If SimpSave doesn't exist.  
+  - `KeyError`: If a key doesn't exist.  
 - **Example**:  
-  ```python
-  value = ss.read('my_key')
-  ```
 
-#### `has(name: str)`  
-- **Description**: Checks whether a specific key exists.  
+```python
+value = ss.read('my_key')
+```  
+#### remove(name: str)  
+- **Description**: Removes the specified key and its associated value from SimpSave.  
 - **Parameters**:  
-  - `name`: The key name to check.  
-- **Returns**: `True` if the key exists, `False` if it does not.  
+  - name: The key name to remove (string).  
+- **Returns**: True if the key is successfully removed.  
 - **Exceptions**:  
-  - `FileNotFoundError`: If the `.ini` file does not exist.  
-  - `TypeError`: If the input name isn't string.s
+  - FileNotFoundError: If the SimpSave `.ini` file does not exist.  
+  - KeyError: If the specified key does not exist.  
+  - TypeError: If the key name is not a string.  
 - **Example**:  
-  ```python
-  if ss.has('my_key'):
-      print("Key exists!")
-  ```
+  
 
-#### `remove(name: str)`  
-- **Description**: Removes the specified key and its value.  
-- **Parameters**:  
-  - `name`: The key name to remove.  
-- **Returns**: `True` if the removal is successful.  
+```python
+ss.remove('my_key')
+```
+
+
+#### clear_ss()  
+- **Description**: Deletes the SimpSave `.ini` file from the current directory.  
+- **Returns**: True if the file was successfully deleted, False otherwise.  
 - **Exceptions**:  
-  - `FileNotFoundError`: If the `.ini` file does not exist.  
-  - `KeyError`: If the key does not exist.  
-  - `TypeError`: If the input name isn't string.
+  - FileNotFoundError: If the `.ini` file does not exist.  
 - **Example**:  
-  ```python
-  ss.remove('my_key')
-  ```
+  
 
-#### `clear_ss()`  
-- **Description**: Clears SimpSave by deleting the `.ini` file.  
-- **Returns**: `True` if the deletion is successful.  
-- **Exceptions**:  
-  - `FileNotFoundError`: If the `.ini` file does not exist.  
-- **Example**:  
-  ```python
-  ss.clear_ss()
-  ```  
-### Implementation
-
-The core of SimpSave is built upon Python's `configparser` module, using an `.ini` file for persistent data storage. It manages Python's basic data types in a key-value pair format and supports simple data read/write operations.  
-SimpSave is designed to be simple, lightweight, and easy to use, making it well-suited for small-scale projects, especially for student assignments.
+```python
+ss.clear_ss()
+```  

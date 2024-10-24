@@ -6,4 +6,4 @@
 @description simpsave示例程序:学生管理系统
 """
 import simpsave as ss
-print(ss.write('hello','hello world!'))
+print(ss.write('hello','hello world!',overwrite=False))

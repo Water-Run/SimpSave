@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: simpsave
-Version: 0.20
+Version: 0.21
 Summary: A lightweight Python library for simple persistent storage using .ini files.
 Home-page: https://github.com/Water-Run/SimpSave
 Author: WaterRun
@@ -174,13 +174,13 @@ for value in values:
 ##### remove(names: Union[str, list[str]], operation_file: str = None)  
 - **Description**: Removes the specified key and its associated value from SimpSave.  
 - **Parameters**:  
-  - names: The key(s) to remove (string or list of strings).  
+  - `names`: The key(s) to remove (string or list of strings).  
   - `operation_file`: The file for operating simpsave. If None, using default SIMPSAVE_FILENAME.   
 - **Returns**: True if the key is successfully removed.  
 - **Exceptions**:  
-  - FileNotFoundError: If the SimpSave `.ini` file does not exist.  
-  - KeyError: If the specified key does not exist.  
-  - TypeError: If the key name is not a string.  
+  - `FileNotFoundError`: If the SimpSave `.ini` file does not exist.  
+  - `KeyError`: If the specified key does not exist.  
+  - `TypeError`: If the key name is not a string.  
   - `NameError`: If `operation_file` is not an INI file.  
 - **Example**:  
   
@@ -195,12 +195,12 @@ ss.remove(['r1', 'r2'])
 ##### has(names: Union[str, list[str]], operation_file: str = None)  
 - **Description**: Check if the specific key exists.  
 - **Parameters**:  
-  - names: The key(s) to check (string or list of strings).  
+  - `names`: The key(s) to check (string or list of strings).  
   - `operation_file`: The file for operating simpsave. If None, using default SIMPSAVE_FILENAME.   
 - **Returns**: True if the key is exist. (Get a list of booleans if names is a list)    
 - **Exceptions**:  
-  - FileNotFoundError: If the SimpSave `.ini` file does not exist.  
-  - TypeError: If the key name is not a string.  
+  - `FileNotFoundError`: If the SimpSave `.ini` file does not exist.  
+  - `TypeError`: If the key name is not a string.  
   - `NameError`: If `operation_file` is not an INI file.  
 - **Example**:  
   
@@ -216,7 +216,7 @@ ss.has('key')
   - `operation_file`: The file for operating simpsave. If None, using default SIMPSAVE_FILENAME.   
 - **Returns**: True if the file was successfully deleted, False otherwise.  
 - **Exceptions**:  
-  - FileNotFoundError: If the `.ini` file does not exist.  
+  - `FileNotFoundError`: If the `.ini` file does not exist.  
   - `NameError`: If `operation_file` is not an INI file.  
 - **Example**:  
   
@@ -224,3 +224,11 @@ ss.has('key')
 ```python
 ss.clear_ss()
 ```  
+
+### File Name and Reserved Words  
+By default, SimpSave uses `__ss__.ini` as its name. You can modify `operation_file` when calling the function to manipulate different files.   
+The following keys are retained in SimpSave:  
+-` _build_ `: Record the creation time of SimpSave instance  
+-` _uupdate_ `: Record the latest update time of SimpSave instance  
+-` _ path_ `: Record the working path of SimpSave instance  
+You can use the ` read() ` function to read relevant information. These reserved words are protected and will be rejected when written using the ` write() ` function.   

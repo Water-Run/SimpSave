@@ -61,9 +61,18 @@ print(ss.read(name))  # Output: Hello World!
 
 The name of a SimpSave storage unit can be any string, but ensure uniqueness to avoid conflicts.
 
-For more detailed function usage and explanations, check the library overview below. You can also visit the GitHub project page to download sample code and explore this simple, easy-to-use library further.
+For more detailed function usage and explanations, check the library overview below. You can also visit the GitHub project page to download sample code and explore this simple, easy-to-use library further.  
 
-### Library Overview  
+### File Name and Reserved Words  
+By default, SimpSave uses `__ss__.ini` as its name. You can modify `operation_file` when calling the function to manipulate different files.   
+The following keys are retained in SimpSave:  
+-` _build_ `: Record the creation time of SimpSave instance  
+-` _update_ `: Record the latest update time of SimpSave instance  
+-` _ path_ `: Record the working path of SimpSave instance  
+You can use the ` read() ` function to read relevant information. These reserved words are protected and will be rejected when written using the ` write() ` function.   
+  
+
+## Library Overview  
 
 ##### `ready(operation_file: str = None)`  
 - **Description**: Checks if SimpSave is initialized by verifying the existence of the `.ini` file.  
@@ -209,12 +218,4 @@ ss.has('key')
 
 ```python
 ss.clear_ss()
-```  
-
-### File Name and Reserved Words  
-By default, SimpSave uses `__ss__.ini` as its name. You can modify `operation_file` when calling the function to manipulate different files.   
-The following keys are retained in SimpSave:  
--` _build_ `: Record the creation time of SimpSave instance  
--` _uupdate_ `: Record the latest update time of SimpSave instance  
--` _ path_ `: Record the working path of SimpSave instance  
-You can use the ` read() ` function to read relevant information. These reserved words are protected and will be rejected when written using the ` write() ` function.   
+```    

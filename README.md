@@ -10,4 +10,4 @@ import simpsave as ss
 ```
 You can check the detailed tutorial for more information:
 [Detailed Tutorial](./source/README.md)  
-In the `demo` directory, there are several example programs available for you to try out and better understand how simpsave works.  
+In the `demo` directory, there are several example programs available for you to try out and better understand how to use simpsave.  

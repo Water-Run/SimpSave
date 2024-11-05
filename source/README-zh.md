@@ -14,7 +14,7 @@ SimpSave 具备以下特点：
 > 该项目已发布在 PyPi 上。
 
 ## 使用指南  
-以下提供一份通俗易懂的使用指南.很建议在使用SimpSave之前完整的阅读.  
+以下提供一份通俗易懂的使用指南.强烈建议在使用SimpSave之前完整的阅读.  
 
 #### 安装SimpSave  
 - 通过 `pip` 安装 SimpSave：  
@@ -29,7 +29,7 @@ SimpSave 具备以下特点：
   ```
   在之后的教程中, 我们均假设已编写该`import`语句.  
 
-> 运行SimpSave需要3.10以上的Python版本  
+> 注意SimpSave的Python版本要求  
 
 #### 从初始化开始     
 要使得数据能够持久化储存,显然我们需要在ROM下创建一个文件.在SimpSave中,这个创建的过程称为初始化.(当然,也包含一些其它的SimpSave信息).  
@@ -67,14 +67,43 @@ ss.ready('No Such File.ini') # 当然,False
 ```
 > 和`init()`一样,修改文件路径即修改`operation_file`.事实上,各个可用的方法都如此!  
 
-#### 简单的写入和读取 
-##### 写入数据   
-##### 写进去了吗?has()  
-##### 使用预设初始化  
-##### 关于类型  
-##### 读取数据    
-##### 批量输入  
+#### 简单的写入和读取   
+现在,我们手上已经有了个准备好的SimpSave实例了.让我们进行一些数据的读写吧!  
 
+##### 写入数据   
+我们使用`write()`进行写入数据.  
+作为初始的简单了解,我们需要知道,`write()`接受的第一个参数`keys`是被存储的值的'键'(可以理解为变量名).'键'可以是任意的字符串.不过,名称必须具备唯一性.  
+> 这里是教程的比较早期部分,描述将不会很严谨.  
+一些键的例子: `a`, `HelloWorld`, `SimpSave`, `count`   
+SimpSave存储键值对.`write()`的第二个参数就是被存储的'值'.值可以是任意Python基本类型(已经足够强大)的值.以下提供一些可写的值的例子:  
+`'a'`, `"HelloWorld"`, `3.14`, `[0, 123, [456], False]`, `{'empty': []}` 
+> Python的基本类型: int, float, str, list, dict, bool  
+有了这两个参数, 我们可以向SimpSave写入我们的第一个数据了:  
+```python
+ss.write('First Key', 'Hello World!') # 向键'First Param'写入值'Hello World!'
+```
+> 试试修改值为 `abc` `1.23` `[0, 1, 2, 3]`  
+##### 写进去了吗?has()  
+`write()`函数执行完了,不过,我们好像还不确认键`First Param`是否真的写入了值.  
+好在我们有`has()`函数.`has()`函数返回布尔值,告诉我们SimpSave实例中是否包含指定的键.  
+```python
+print(ss.has('First Key')) # True
+print(ss.has('Second Key')) # False
+```  
+> `write()`函数也返回布尔值,可以判断执行是否成功  
+##### 读取数据    
+通过`has()`, 我们知道了SimpSave实例中键`First Key`成功写入.不过,我们还不确定它存储的值是什么.  
+我们使用`read()`函数读取数据:  
+```python
+a = ss.read('First Key')
+print(a) # Hello World!
+```
+`read()`函数会自动的返回和保存类型一致的值.  
+```python
+ss.write('Second Key', 3.14)
+ss.write('Third Key', [3.14])
+print(f'{ss.read('Second Key')} {type()}')
+```
 #### 示例程序: HelloWorld   
 接下来, 让我们编写一个最简单的示例程序:  
 ```python
@@ -84,6 +113,13 @@ ss.write('Hello World', 'Hello World!') # 向键 "Hello World" 写入值 "Hello 
 # 读取键 "Hello World" 的值并打印
 print(ss.read('Hello World')) # Hello World!
 ```   
+#### 稍微高级的写入读取  
+##### 删除数据  
+##### 批量输入  
+##### 使用预设初始化  
+##### 只读  
+##### 关于类型  
+##### 写入非基本类型   
 
 #### 注释  
 ##### 键注释  
@@ -102,9 +138,11 @@ print(ss.read('Hello World')) # Hello World!
 ss.write('key1', 1)
 ss.lock('key1', True) # 将key1的键锁开启
 ss.read('key1') # 正常执行  
-# 以下操作将导致异常抛出
+
+# 以下两个操作将导致异常抛出(键锁开启,键只读)
 ss.write('key1', 2)
 ss.remove('key1')
+
 ss.lock('key1', False) # 关闭key1的键锁
 ss.remove('key1')
 ss.has('key1') # False
@@ -137,10 +175,6 @@ ss.write(['key2', 'key3'], [[4, 5], 6], decrypts = ['seed2', 'seed3']) # 批量
 
 #### match(): 使用正则表达式匹配   
 
-#### 'ss'方法: 操控SimpSave    
-##### 'ss'?  
-##### 功能  
-
 #### 可变,可靠: 更换文件   
 ##### 换一个文件  
 在之前的教程中,我们均使用默认的SimpSave INI文件,即在相对路径下创建`_SIMPSAVE_DEFAULTPATH_`中存储的文件名(默认情况下,即`__ss__.ini`).   
@@ -158,7 +192,7 @@ print(ss.read('key1', opeartion_file = 'a.ini')) # value in file a
 print(ss.read('key1', operation_file = 'b.ini')) # value in file b
 ```
 很容易的将各个数据独立化.  
-不过,这些使用相对路径的方法还是很不稳定可靠.一个简单的例子是,如果以不同的目录启动,那SimpSave实例的路径也将不同.  
+不过,这些使用相对路径的方法还是很不稳定可靠.一个简单的例子是,如果以不同的目录启动终端,那SimpSave实例的路径也将不同.  
 一个简单的方法便是使用绝对路径:  
 ```python
 ss.init(operation_file = 'C:\\absoulte.ini')
@@ -177,6 +211,9 @@ ss.init(operation_file = '::ss?ss_in_ss.ini')
 通过这种方式,将文件统一存放,便于管理与使用.我们建议使用这种方式进行存储.   
 > (很容易遗忘)如果使用自定义名称, 所有调用的方法都需要你手动设定`operation_file`. 否则,随时出现`FileNotFoundError`等异常.如果你觉得这太麻烦了,你可以修改`_SIMPSAVE_DEFAULTPATH_`来修改默认文件名.  
 
+#### 'ss'方法: 操控SimpSave    
+##### 'ss'?  
+##### 功能  
 #### 更高级的使用SimpSave  
 ##### write()的更高级用法   
 ##### 通用结构   

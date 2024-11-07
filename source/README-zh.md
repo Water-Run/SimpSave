@@ -44,13 +44,14 @@ ss.init()
 
 在运行代码后,你大概会发现在你的代码路径下多了一个`__ss__.ini`文件.恭喜!你成功创建了SimpSave的第一个实例.  
 
-> `__ss__.ini`是SimpSave的默认文件名.你可以通过修改`init()`中的`operation_file`进行修改.有关文件名的更多内容,见后文更换文件的部分.  
+> `__ss__.ini`是SimpSave的默认文件名.你可以通过修改`init()`中的`operation_file`进行修改.存储的路径和当前Python运行路径相关.有关文件名的更多内容,见后文更换文件的部分.  
 
 建议为你的SimpSave实例添加描述.操作很简单,`init()`第一个参数即是描述:  
 ```python
 ss.init("First SimpSave!")
 ```  
-> 也可以通过设置`description=`显式的进行修改  
+> 也可以通过设置`description=`显式的进行修改    
+
 从初始化开始,让我们正式的掌握SimpSave.  
 
 ##### 是否ready()  
@@ -63,7 +64,7 @@ else:
 ```
 当然也可以修改SimpSave的实例对象:
 ```python
-ss.ready('No Such File.ini') # 当然,False
+ss.ready('No Such File.ini') # 当然,No ready
 ```
 > 和`init()`一样,修改文件路径即修改`operation_file`.事实上,各个可用的方法都如此!  
 
@@ -73,11 +74,13 @@ ss.ready('No Such File.ini') # 当然,False
 ##### 写入数据   
 我们使用`write()`进行写入数据.  
 作为初始的简单了解,我们需要知道,`write()`接受的第一个参数`keys`是被存储的值的'键'(可以理解为变量名).'键'可以是任意的字符串.不过,名称必须具备唯一性.  
-> 这里是教程的比较早期部分,描述将不会很严谨.  
+> 这里是教程的比较早期部分,描述将不会很严谨.    
+
 一些键的例子: `a`, `HelloWorld`, `SimpSave`, `count`   
 SimpSave存储键值对.`write()`的第二个参数就是被存储的'值'.值可以是任意Python基本类型(已经足够强大)的值.以下提供一些可写的值的例子:  
 `'a'`, `"HelloWorld"`, `3.14`, `[0, 123, [456], False]`, `{'empty': []}` 
-> Python的基本类型: int, float, str, list, dict, bool  
+> Python的基本类型: int, float, str, list, dict, bool    
+
 有了这两个参数, 我们可以向SimpSave写入我们的第一个数据了:  
 ```python
 ss.write('First Key', 'Hello World!') # 向键'First Param'写入值'Hello World!'
@@ -85,7 +88,7 @@ ss.write('First Key', 'Hello World!') # 向键'First Param'写入值'Hello World
 > 试试修改值为 `abc` `1.23` `[0, 1, 2, 3]`  
 ##### 写进去了吗?has()  
 `write()`函数执行完了,不过,我们好像还不确认键`First Param`是否真的写入了值.  
-好在我们有`has()`函数.`has()`函数返回布尔值,告诉我们SimpSave实例中是否包含指定的键.  
+好在我们有`has()`函数.`has()`函数的第一个参数是待判断的键.它返回布尔值,告诉我们SimpSave实例中是否包含指定的键.  
 ```python
 print(ss.has('First Key')) # True
 print(ss.has('Second Key')) # False
@@ -95,25 +98,33 @@ print(ss.has('Second Key')) # False
 通过`has()`, 我们知道了SimpSave实例中键`First Key`成功写入.不过,我们还不确定它存储的值是什么.  
 我们使用`read()`函数读取数据:  
 ```python
-a = ss.read('First Key')
+a = ss.read('First Key') # 读取First Key的内容
 print(a) # Hello World!
 ```
 `read()`函数会自动的返回和保存类型一致的值.  
 ```python
+# 准备数据
 ss.write('Second Key', 3.14)
 ss.write('Third Key', [3.14])
-print(f'{ss.read('Second Key')} {type()}')
+
+# 读取
+second = ss.read('Second Key')
+third = ss.read('Third key')
+print(f'{second} {type(second).__name__}') # 3.14 float
+print(f'{third} {type(third).__name__}') # [3.14] list
 ```
+> `read()`可转换基本类型.对于非基本类型,如果实现了`__str__()`,可以在写入时开启`auto_convert`以字符串的形式存储.  
 #### 示例程序: HelloWorld   
 接下来, 让我们编写一个最简单的示例程序:  
 ```python
 import simpsave as ss # 导入SimpSave
 ss.init() # 初始化, 创建SimpSave实例.ini文件  
-ss.write('Hello World', 'Hello World!') # 向键 "Hello World" 写入值 "Hello World!"
 # 读取键 "Hello World" 的值并打印
 print(ss.read('Hello World')) # Hello World!
 ```   
+> 如果需要多次运行, 
 #### 稍微高级的写入读取  
+接下来,让我们学习一些SimpSave的更高级用法.  
 ##### 删除数据  
 ##### 批量输入  
 ##### 使用预设初始化  

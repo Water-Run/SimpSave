@@ -2,7 +2,7 @@
 @file simpsave-beta.py
 @author WaterRun
 @version 1.0
-@date 2024-11-04
+@date 2024-11-07
 @description Source code of simpsave project
 """
 
@@ -23,7 +23,6 @@ _SUPPORTED_TYPES_ = ('int', 'float', 'bool', 'str', 'list', 'tuple', 'dict') # B
 r"""
 Private
 """
-
 class _Checker_:
     
     r"""
@@ -146,7 +145,7 @@ class _Process_:
         return path
 
     @staticmethod
-    def write(keys: list[str], values: list[any], operation_file: str, annotations: Optional[List[Optional[str]]] = None):
+    def write(keys: list[str], values: list[any], operation_file: str, annotations: Optional[List[Optional[str]]] = None) -> bool:
         r"""
         Write to SimpSave file (Ignore any read-only protection)
         
@@ -155,6 +154,7 @@ class _Process_:
         :param operation_file: SimpSave instance for executing operations
         :param annotations: Annotation to be write. If None, write empty string
         :raise Exception: If exception occured
+        :return: False if write failed, True otherwise
         """
         if annotations is None:
             annotations = [None for i in keys]
@@ -237,6 +237,7 @@ class _Process_:
         :param seed: The encrypted key
         :param value: Encrypted content
         :param operation_file:  SimpSave instance for executing operations
+        :return: The encrypted value
         """
         
         def _encrypte(seed: str, value: str) -> str:
@@ -256,6 +257,7 @@ class _Process_:
         :param seed: The decrypted key
         :param value: Decrypted content
         :param operation_file:  SimpSave instance for executing operations
+        :return: The decrypted value
         """
         
         def _decrypte(seed: str, value: str) -> str:
@@ -271,7 +273,6 @@ class _Process_:
 r"""
 Public(ss)
 """
-
 def info_ss(operation_file: Optional[str] = None):
     r"""
     SimpSave console for displaying internal informations
@@ -323,9 +324,6 @@ def description_ss(operation_file: Optional[str] = None):
             _Process_.update(operation_file)
             _Process_.log(f'Update new description: {new_des}', 1, operation_file)
             print('Descripton updated')
-        else:
-            _Process_.log(f'Write fail while update new description', 0, operation_file)
-            print('Can not write new description')
     input('>>')
     
 def log_ss(operation_file: Optional[str] = None, /, once_show: int = 5, reverse: bool = True, contain_err: bool = True, contain_ipt: bool = True, contain_std: bool = True):
@@ -424,6 +422,10 @@ Public
 """
 def ready(operation_file: Optional[str] = None) -> bool:
     r"""
+    Check if SimpSave is fully prepared
+    
+    :param operation_file: SimpSave instance for executing operations
+    :return: True if SimpSave is ready, False otherwise
     """
 
     operation_file = _Process_.path_parser(operation_file)
@@ -443,6 +445,18 @@ def ready(operation_file: Optional[str] = None) -> bool:
 
 def init(description: str = "Default SimpSave instance description. " , preset_keys: Optional[Union[str,list[str]]] = None, preset_values: Optional[Union[any,list[any]]] = None, preset_annotations: Optional[Union[str,Optional[List[Optional[str]]]]] = None, preset_encryptes: Optional[Union[str,List[Optional[str]]]] = None, /, overwrite_check: bool = True, operation_file: Optional[str] = None) -> bool:
     r"""
+    Perform SimpSave initialization
+    
+    :param description: Describe the newly created SimpSave instance
+    :param preset_keys: If not None, write the preset key(s) during initialization. If it is a single string, the subsequent corresponding values, optional annotation, and encrypte are also single; If it is a list, the corresponding values and optional annotations and encryptes in the future are also a list
+    :param preset_values: If not None, the preset value(s) corresponding to the preset key
+    :param preset_annotations: If not None, the preset annotation(s) corresponding to the preset key
+    :param preset_encryptes: If not None, the preset encrypte(s) corresponding to the preset key
+    :param overwrite_check: If true and the specified name SimpSave is already an instance, block overwrite operation
+    :param operation_file: SimpSave instance for executing operations
+    :raise FileExistError: If overwrite check enabled and SimpSave file exist
+    :raise RuntimeError: If fail to load init data
+    :return: True if init success, False otherwise
     """
 
     operation_file = _Process_.path_parser(operation_file)
@@ -470,6 +484,11 @@ def init(description: str = "Default SimpSave instance description. " , preset_k
 
 def has(keys: Union[str,list[str]] = [], /, operation_file: Optional[str] = None) -> Union[bool,list[bool]]:
     r"""
+    Determine whether the specified key(s) exists in the SimpSave instance
+    
+    :param keys: Key(s) awaiting existence determination
+    :param operation_file: SimpSave instance for executing operations
+    :return: If the input is a single string, return the existence state corresponding to a single Boolean value; If the input is a list, return a corresponding list of consistent existence Boolean values
     """
 
     operation_file = _Process_.path_parser(operation_file)
@@ -492,6 +511,14 @@ def has(keys: Union[str,list[str]] = [], /, operation_file: Optional[str] = None
 
 def read(keys: Union[str,list[str]], decryptes: Optional[Union[str,List[Optional[str]]]] = None, /, complete_dict: bool = False, operation_file: Optional[str] = None) -> Union[any,list[any],dict]:
     r"""
+    Read the value of the specified key(s) in the SimpSave instance
+    
+    :param keys: Key(s) to be read
+    :param decryptes: The decryption key(s) that corresponds one-to-one with the key. If it is None, do not perform decryption; If it is a list and an item is None, do not decrypt the corresponding key.
+    :param complete_dict: If true, return the complete information dict. Return value only otherwise
+    :param operation_file: SimpSave instance for executing operations
+    :raise RuntimeError: If exception accourd in read process
+    :return: Read data from SimpSave instance as required. If key is a single string, return single; If keys is a list of string, return a list
     """
 
     operation_file = _Process_.path_parser(operation_file)
@@ -549,6 +576,20 @@ def read(keys: Union[str,list[str]], decryptes: Optional[Union[str,List[Optional
 
 def write(keys: Union[str,list[str]], values: Union[any,list[any]],  annotations: Optional[Union[str,List[Optional[str]]]] = None, encryptes: Optional[Union[str,List[Optional[str]]]] = None, /, overwrite: bool = True, auto_init: bool = False, type_check: bool = False, convert_unsupported: bool = False, operation_file: Optional[str] = None) -> bool:
     r"""
+    Write specified key(s) with value(s), annotation(s)(Optional) and encrypte seed(s)(Optional) to the SimpSave instance
+    
+    :param keys: Key(s) to be written
+    :param values: Value(s) that corresponds keys. If key is a single string, whole value would be conside single; If keys is a list, write one-to-one with keys.  
+    :param annotations: The annotation(s) that corresponds one-to-one with the key. If it is None, write empty annotation for all key; If it is a list and an item is None, write empty annotation for corresponding key.
+    :param encryptes: The encryption key(s) that corresponds one-to-one with the key. If it is None, do not perform encryption; If it is a list and an item is None, do not encrypt the corresponding key.
+    :param overwrite: If True, blocking writes to existing keys
+    :param auto_init: If True, auto init SimpSave if not init yet. Raise Exception (if not init) otherwise
+    :param type_check: If True, raise Exception if overwrite by a different type
+    :param convert_unsupport: If True, transform to string if value is not a type of python basic types. Raise Exception (if not a basic type) otherwise
+    :param operation_file: SimpSave instance for executing operations
+    :raise TypeError: If overwrite with different type and type-check activate, or write an unsupport type of value and convert-unsupport inactive
+    :raise KeyError: If overwrite and overwrite inactive
+    :return: True if sucess, False otherwise
     """
 
     operation_file = _Process_.path_parser(operation_file)
@@ -638,6 +679,12 @@ def write(keys: Union[str,list[str]], values: Union[any,list[any]],  annotations
 
 def remove(keys: Union[str,list[str]], /, operation_file: Optional[str] = None) -> bool:
     r"""
+    Remove specified key(s) on the SimpSave instance
+    
+    :param keys: Key(s) to be removed
+    :param operation_file: SimpSave instance for executing operations
+    :raise KeyError: If key(s) not in SimpSave instace
+    :return: True if sucess, False otherwise
     """
 
     operation_file = _Process_.path_parser(operation_file)
@@ -674,6 +721,12 @@ def remove(keys: Union[str,list[str]], /, operation_file: Optional[str] = None) 
 
 def lock(keys: Union[str,list[str]], boolean_sequence: Union[bool,list[bool]], /, opeartion_file: Optional[str] = None) -> bool:
     r"""
+    Add or remove specified key-lock(s) on the SimpSave instance
+    
+    :param keys: Key(s) to be change key-lock
+    :param boolean_sequence: Key-lock setting value. If key is a single string, the value should be a boolean value; If keys is a list of string, the value should be a list of boolean value
+    :param operation_file: SimpSave instance for executing operations
+    :return: True if sucess, False otherwise
     """
     
     operation_file = _Process_.path_parser(operation_file)
@@ -702,6 +755,11 @@ def lock(keys: Union[str,list[str]], boolean_sequence: Union[bool,list[bool]], /
     
 def match(re_key: str, /, operation_file: Optional[str] = None) -> list[dict]:
     r"""
+    Regularly matches a specified string in SimpSave instance
+    
+    :param re_key: Regular expression for the matched key
+    :param operation_file: SimpSave instance for executing operations
+    :return: Full value dict of matched keys
     """
     
     operation_file = _Process_.path_parser(operation_file)
@@ -715,7 +773,7 @@ def match(re_key: str, /, operation_file: Optional[str] = None) -> list[dict]:
     matching_sections = [section for section in config.sections() if pattern.match(section)]
     
     result = read(matching_sections, complete_dict=True, operation_file=operation_file)
-    for unit,match in zip(result, matching_sections):
+    for unit, match in zip(result, matching_sections):
         unit['key'] = match
        
     return result 

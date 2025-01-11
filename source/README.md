@@ -156,7 +156,7 @@ print(ss.remove('key_nonexistent'))  # Outputs False, because the key does not e
 
 SimpSave uses the `match` function for regular expression matching:  
 ```python
-def match(re: str, /, file: str | None = None) -> dict[str, any]:
+def match(re: str = "", /, file: str | None = None) -> dict[str, any]:
     ...
 ```
 
@@ -178,7 +178,7 @@ print(result)  # Outputs {'key1': 'value', 'key2': 3.14}
 ```
 
 > Regular expression matching is useful to understand the contents stored in a specified `.ini` file  
-
+> If re is null, then all results are automatically matched  
 ### Deleting  
 
 SimpSave uses the `delete` function to delete files:  

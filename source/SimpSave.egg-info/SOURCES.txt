@@ -1,0 +1,6 @@
+README.md
+setup.py
+SimpSave.egg-info/PKG-INFO
+SimpSave.egg-info/SOURCES.txt
+SimpSave.egg-info/dependency_links.txt
+SimpSave.egg-info/top_level.txt

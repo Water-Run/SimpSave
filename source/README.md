@@ -95,6 +95,35 @@ print(ss.read('key1'))  # Outputs 'value'
 print(ss.read('key2'))  # Outputs 3.14
 ```
 
+### Checking Key Existence  
+
+SimpSave uses the `has` function to check if a specified key exists in the `.ini` file:  
+```python
+def has(key: str, /, file: str | None = None) -> bool:
+    ...
+```
+
+***Parameters:***  
+- `key`: The target key to check. Must be a valid key name for an INI file  
+- `file`: The target file to check in. Defaults to `__ss__.ini`. If you want to change it, specify a valid `.ini` file path, either absolute or relative, or use the `:ss:` mode.  
+
+***Return Value:***  
+`bool` Whether the specified key exists in the file  
+
+***Exceptions:***  
+- `FileNotFoundError` If the specified `.ini` file does not exist  
+- `ValueError` If the key is invalid  
+
+***Code Example:***  
+```python
+import simpsave as ss
+ss.write('key1', 'value')
+ss.write('key2', 3.14)
+
+print(ss.has('key1'))  # Outputs True, because the key 'key1' exists
+print(ss.has('key_nonexistent'))  # Outputs False, because the key does not exist
+```
+
 ### Removing  
 
 SimpSave uses the `remove` function for removing keys:  

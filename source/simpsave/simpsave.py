@@ -97,8 +97,6 @@ def read(key: str, /, file: str | None = None) -> any:
     :raise ValueError: If the key is illegal
     """
     file = _path_parser(file)
-    if not regex.match(r'^[a-zA-Z0-9_-]+$', key):
-        raise ValueError(f"Invalid key name: {key}")
     config = _load_config(file)
     if key not in config:
         raise KeyError(f'Key {key} does not exist in file {file}')
@@ -123,7 +121,22 @@ def read(key: str, /, file: str | None = None) -> any:
         raise ValueError(f'Unable to convert value {value_str} to type {type_str}')
 
 
-def remove(key: str, /, file: str | None = None) -> bool:
+def has(key: str, /, file: str | None = None) -> bool:
+    r"""
+    Check if the specified key exists in the given .ini file.
+    :param key: Key to check
+    :param file: Path to the .ini file
+    :return: True if the key exists, False otherwise
+    :raise FileNotFoundError: If the .ini file does not exist
+    :raise ValueError: If the key is illegal
+    """
+    file = _path_parser(file)
+    config = _load_config(file)
+
+    return key in config
+
+
+def remove(key: str = "", /, file: str | None = None) -> bool:
     r"""
     Remove the specified key (entire section). Returns False if it doesn't exist
     :param key: Key to remove

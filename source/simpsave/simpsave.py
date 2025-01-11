@@ -141,7 +141,7 @@ def has(key: str, /, file: str | None = None) -> bool:
     return key in config
 
 
-def remove(key: str = "", /, file: str | None = None) -> bool:
+def remove(key: str, /, file: str | None = None) -> bool:
     r"""
     Remove the specified key (entire section). Returns False if it doesn't exist
     :param key: Key to remove
@@ -158,7 +158,7 @@ def remove(key: str = "", /, file: str | None = None) -> bool:
     return True
 
 
-def match(re: str, /, file: str | None = None) -> dict[str, any]:
+def match(re: str = "", /, file: str | None = None) -> dict[str, any]:
     r"""
     Return key-value pairs that match the regular expression from the .ini file in the format {'key':..,'value':..}
     :param re: Regular expression string

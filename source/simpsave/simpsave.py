@@ -75,7 +75,12 @@ def write(key: str, value: any, /, file: str | None = None) -> bool:
         raise TypeError(f"simpsave only supports Python basic types, i.e. {basic_types}")
     value_type = type(value).__name__
 
+    if not os.path.exists(file):
+        with open(file, 'w', encoding='utf-8') as new_file:
+            new_file.write("")
+
     config = configparser.ConfigParser()
+    config.read(file, encoding='utf-8')
     try:
         escaped_value = str(value).replace('\n', '\\n').replace('=', '\\=').replace(':', '\\:')
         config[key] = {'value': str(escaped_value), 'type': value_type}

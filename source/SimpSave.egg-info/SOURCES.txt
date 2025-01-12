@@ -4,3 +4,9 @@ SimpSave.egg-info/PKG-INFO
 SimpSave.egg-info/SOURCES.txt
 SimpSave.egg-info/dependency_links.txt
 SimpSave.egg-info/top_level.txt
+simpsave/__init__.py
+simpsave/simpsave.py
+simpsave.egg-info/PKG-INFO
+simpsave.egg-info/SOURCES.txt
+simpsave.egg-info/dependency_links.txt
+simpsave.egg-info/top_level.txt

@@ -1,10 +1,8 @@
 from setuptools import setup, find_packages
 
 setup(
-    name='SimpSave',
-    version='0.9',
-    packages=find_packages(where='source'),
-    include_package_data=True,
+    name='simpsave',
+    version='0.92',
     install_requires=[],
     author='WaterRun',
     author_email='2263633954@qq.com',

@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: SimpSave
-Version: 0.1.0
+Version: 0.9
 Summary: SimpSave: Easy Python Basic Variable Persistence Library
 Home-page: https://github.com/Water-Run/SimpSave
 Author: WaterRun
@@ -108,6 +108,35 @@ print(ss.read('key1'))  # Outputs 'value'
 print(ss.read('key2'))  # Outputs 3.14
 ```
 
+### Checking Key Existence  
+
+SimpSave uses the `has` function to check if a specified key exists in the `.ini` file:  
+```python
+def has(key: str, /, file: str | None = None) -> bool:
+    ...
+```
+
+***Parameters:***  
+- `key`: The target key to check. Must be a valid key name for an INI file  
+- `file`: The target file to check in. Defaults to `__ss__.ini`. If you want to change it, specify a valid `.ini` file path, either absolute or relative, or use the `:ss:` mode.  
+
+***Return Value:***  
+`bool` Whether the specified key exists in the file  
+
+***Exceptions:***  
+- `FileNotFoundError` If the specified `.ini` file does not exist  
+- `ValueError` If the key is invalid  
+
+***Code Example:***  
+```python
+import simpsave as ss
+ss.write('key1', 'value')
+ss.write('key2', 3.14)
+
+print(ss.has('key1'))  # Outputs True, because the key 'key1' exists
+print(ss.has('key_nonexistent'))  # Outputs False, because the key does not exist
+```
+
 ### Removing  
 
 SimpSave uses the `remove` function for removing keys:  
@@ -140,7 +169,7 @@ print(ss.remove('key_nonexistent'))  # Outputs False, because the key does not e
 
 SimpSave uses the `match` function for regular expression matching:  
 ```python
-def match(re: str, /, file: str | None = None) -> dict[str, any]:
+def match(re: str = "", /, file: str | None = None) -> dict[str, any]:
     ...
 ```
 
@@ -162,7 +191,7 @@ print(result)  # Outputs {'key1': 'value', 'key2': 3.14}
 ```
 
 > Regular expression matching is useful to understand the contents stored in a specified `.ini` file  
-
+> If re is null, then all results are automatically matched  
 ### Deleting  
 
 SimpSave uses the `delete` function to delete files:  

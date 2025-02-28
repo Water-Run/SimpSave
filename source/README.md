@@ -7,7 +7,7 @@ SimpSave utilizes `.ini` files to store Python basic types in key-value pairs.
 - **Extremely Simple**: The project consists of fewer than 200 lines of code  
 - **Extremely Easy to Use**: It’s almost effortless to get started  
 - **Flexible and Free**: SimpSave has very few restrictions, allowing you to fully leverage Python's basic data structures  
-> This document applies to SimpSave version 2.0  
+> This document applies to SimpSave version 2.1  
 
 ## Installation  
 
@@ -111,8 +111,7 @@ def has(key: str, /, file: str | None = None) -> bool:
 `bool` Whether the specified key exists in the file  
 
 ***Exceptions:***  
-- `FileNotFoundError` If the specified `.ini` file does not exist  
-- `ValueError` If the key is invalid  
+- `FileNotFoundError` If the specified `.ini` file does not exist
 
 ***Code Example:***  
 ```python
@@ -167,6 +166,9 @@ def match(re: str = "", /, file: str | None = None) -> dict[str, any]:
 ***Return Value:***  
 `dict[str, any]` A dictionary of matched keys and their corresponding values  
 
+***Exceptions:***  
+- `FileNotFoundError` If the specified `.ini` file does not exist  
+
 ***Code Example:***  
 ```python
 import simpsave as ss
@@ -192,6 +194,9 @@ def delete(file: str | None = None) -> bool:
 
 ***Return Value:***  
 `bool` Whether the deletion was successful  
+
+***Exceptions:***  
+- `IOError` If the delete failed  
 
 ***Code Example:***  
 ```python

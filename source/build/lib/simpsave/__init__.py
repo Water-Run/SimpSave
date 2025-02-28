@@ -1,1 +1,1 @@
-from .simpsave import write, read, remove, match, delete
+from .simpsave import write, read, remove, match, delete, has

@@ -1,8 +1,8 @@
 """
 @file simpsave.py
 @author WaterRun
-@version 1.0
-@date 2025-01-12
+@version 2.1
+@date 2025-02-28
 @description Source code of simpsave project
 """
 
@@ -68,6 +68,7 @@ def write(key: str, value: any, /, file: str | None = None) -> bool:
     :param file: Path to the .ini file
     :return: Whether the write was successful
     :raise TypeError: If the value is not a basic type
+    :raise FileNotFoundError: If the specified .ini file does not exist
     """
     file = _path_parser(file)
     basic_types = (int, float, str, bool, bytes, complex, list, tuple, set, frozenset, dict, type(None))
@@ -132,8 +133,7 @@ def has(key: str, /, file: str | None = None) -> bool:
     :param key: Key to check
     :param file: Path to the .ini file
     :return: True if the key exists, False otherwise
-    :raise FileNotFoundError: If the .ini file does not exist
-    :raise ValueError: If the key is illegal
+    :raise FileNotFoundError: If the specified .ini file does not exist
     """
     file = _path_parser(file)
     config = _load_config(file)
@@ -147,6 +147,7 @@ def remove(key: str, /, file: str | None = None) -> bool:
     :param key: Key to remove
     :param file: Path to the .ini file
     :return: Whether the removal was successful
+    :raise FileNotFoundError: If the specified .ini file does not exist
     """
     file = _path_parser(file)
     config = _load_config(file)
@@ -164,6 +165,7 @@ def match(re: str = "", /, file: str | None = None) -> dict[str, any]:
     :param re: Regular expression string
     :param file: Path to the .ini file
     :return: Dictionary of matched results
+    :raise FileNotFoundError: If the specified .ini file does not exist
     """
     file = _path_parser(file)
     config = _load_config(file)
@@ -180,6 +182,7 @@ def delete(file: str | None = None) -> bool:
     Delete the entire .ini file. Returns False if it doesn't exist
     :param file: Path to the .ini file to delete
     :return: Whether the deletion was successful
+    :raise IOError: If the delete failed
     """
     file = _path_parser(file)
     if not os.path.isfile(file):

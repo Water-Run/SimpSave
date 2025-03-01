@@ -7,7 +7,7 @@ SimpSave utilizes `.ini` files to store Python basic types in key-value pairs.
 - **Extremely Simple**: The project consists of fewer than 200 lines of code  
 - **Extremely Easy to Use**: It’s almost effortless to get started  
 - **Flexible and Free**: SimpSave has very few restrictions, allowing you to fully leverage Python's basic data structures  
-> This document applies to SimpSave version 2.1  
+> This document applies to SimpSave version 2.2  
 
 ## Installation  
 
@@ -37,11 +37,14 @@ This allows SimpSave to efficiently leverage Python's powerful built-in types li
 
 ## Usage Guide  
 
+> Version 2.1 update: The `file` parameter must now be explicitly declared in function calls   
+> > eg. `read('key1', file='1.ini')`  
+ 
 ### Writing  
 
 SimpSave uses the `write` function for writing operations:  
 ```python
-def write(key: str, value: any, /, file: str | None = None) -> bool:
+def write(key: str, value: any, *, file: str | None = None) -> bool:
     ...
 ```
 
@@ -69,7 +72,7 @@ ss.write('key2', [0, True, [123]])  # Writes a mixed list to key2, overwriting t
 
 SimpSave uses the `read` function for reading operations:  
 ```python
-def read(key: str, /, file: str | None = None) -> any:
+def read(key: str, *, file: str | None = None) -> any:
     ...
 ```
 
@@ -99,7 +102,7 @@ print(ss.read('key2'))  # Outputs 3.14
 
 SimpSave uses the `has` function to check if a specified key exists in the `.ini` file:  
 ```python
-def has(key: str, /, file: str | None = None) -> bool:
+def has(key: str, *, file: str | None = None) -> bool:
     ...
 ```
 
@@ -127,7 +130,7 @@ print(ss.has('key_nonexistent'))  # Outputs False, because the key does not exis
 
 SimpSave uses the `remove` function for removing keys:  
 ```python
-def remove(key: str, /, file: str | None = None) -> bool:
+def remove(key: str, *, file: str | None = None) -> bool:
     ...
 ```
 
@@ -155,7 +158,7 @@ print(ss.remove('key_nonexistent'))  # Outputs False, because the key does not e
 
 SimpSave uses the `match` function for regular expression matching:  
 ```python
-def match(re: str = "", /, file: str | None = None) -> dict[str, any]:
+def match(re: str = "", *, file: str | None = None) -> dict[str, any]:
     ...
 ```
 
@@ -185,7 +188,7 @@ print(result)  # Outputs {'key1': 'value', 'key2': 3.14}
 
 SimpSave uses the `delete` function to delete files:  
 ```python
-def delete(file: str | None = None) -> bool:
+def delete(*, file: str | None = None) -> bool:
     ...
 ```
 

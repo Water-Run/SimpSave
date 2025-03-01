@@ -1,8 +1,8 @@
 """
 @file simpsave.py
 @author WaterRun
-@version 2.1
-@date 2025-02-28
+@version 2.2
+@date 2025-03-01
 @description Source code of simpsave project
 """
 
@@ -60,7 +60,7 @@ def _load_config(file: str) -> configparser.ConfigParser:
     return config
 
 
-def write(key: str, value: any, /, file: str | None = None) -> bool:
+def write(key: str, value: any, *, file: str | None = None) -> bool:
     r"""
     Write data to the specified .ini file. If the .ini file does not exist, it will be created
     :param key: Key to write to
@@ -92,7 +92,7 @@ def write(key: str, value: any, /, file: str | None = None) -> bool:
         return False
 
 
-def read(key: str, /, file: str | None = None) -> any:
+def read(key: str, *, file: str | None = None) -> any:
     r"""
     Read data from the specified .ini file for a given key
     :param key: Key to read from
@@ -127,7 +127,7 @@ def read(key: str, /, file: str | None = None) -> any:
         raise ValueError(f'Unable to convert value {value_str} to type {type_str}')
 
 
-def has(key: str, /, file: str | None = None) -> bool:
+def has(key: str, *, file: str | None = None) -> bool:
     r"""
     Check if the specified key exists in the given .ini file.
     :param key: Key to check
@@ -141,7 +141,7 @@ def has(key: str, /, file: str | None = None) -> bool:
     return key in config
 
 
-def remove(key: str, /, file: str | None = None) -> bool:
+def remove(key: str, *, file: str | None = None) -> bool:
     r"""
     Remove the specified key (entire section). Returns False if it doesn't exist
     :param key: Key to remove
@@ -159,7 +159,7 @@ def remove(key: str, /, file: str | None = None) -> bool:
     return True
 
 
-def match(re: str = "", /, file: str | None = None) -> dict[str, any]:
+def match(re: str = "", *, file: str | None = None) -> dict[str, any]:
     r"""
     Return key-value pairs that match the regular expression from the .ini file in the format {'key':..,'value':..}
     :param re: Regular expression string
@@ -177,7 +177,7 @@ def match(re: str = "", /, file: str | None = None) -> dict[str, any]:
     return result
 
 
-def delete(file: str | None = None) -> bool:
+def delete(*, file: str | None = None) -> bool:
     r"""
     Delete the entire .ini file. Returns False if it doesn't exist
     :param file: Path to the .ini file to delete

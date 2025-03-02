@@ -1,8 +1,8 @@
 """
 @file simpsave.py
 @author WaterRun
-@version 2.2
-@date 2025-03-01
+@version 2.3
+@date 2025-03-02
 @description Source code of simpsave project
 """
 
@@ -53,7 +53,7 @@ def _load_config(file: str) -> configparser.ConfigParser:
     :return: Loaded ConfigParser object
     :raise FileNotFoundError: If the file does not exist
     """
-    config = configparser.ConfigParser()
+    config = configparser.ConfigParser(interpolation=None)
     if not os.path.isfile(file):
         raise FileNotFoundError(f'The specified .ini file does not exist: {file}')
     config.read(file)
@@ -80,7 +80,7 @@ def write(key: str, value: any, *, file: str | None = None) -> bool:
         with open(file, 'w', encoding='utf-8') as new_file:
             new_file.write("")
 
-    config = configparser.ConfigParser()
+    config = configparser.ConfigParser(interpolation=None)
     config.read(file, encoding='utf-8')
     try:
         escaped_value = str(value).replace('\n', '\\n').replace('=', '\\=').replace(':', '\\:')

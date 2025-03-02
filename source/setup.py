@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='simpsave',
-    version='2.2',
+    version='2.3',
     install_requires=[],
     author='WaterRun',
     author_email='2263633954@qq.com',

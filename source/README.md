@@ -7,7 +7,7 @@ SimpSave utilizes `.ini` files to store Python basic types in key-value pairs.
 - **Extremely Simple**: The project consists of fewer than 200 lines of code  
 - **Extremely Easy to Use**: It’s almost effortless to get started  
 - **Flexible and Free**: SimpSave has very few restrictions, allowing you to fully leverage Python's basic data structures  
-> This document applies to SimpSave version 2.2  
+> This document applies to SimpSave version 2.3  
 
 ## Installation  
 
@@ -37,7 +37,7 @@ This allows SimpSave to efficiently leverage Python's powerful built-in types li
 
 ## Usage Guide  
 
-> Version 2.1 update: The `file` parameter must now be explicitly declared in function calls   
+> Version 2.2 update: The `file` parameter must now be explicitly declared in function calls   
 > > eg. `read('key1', file='1.ini')`  
  
 ### Writing  

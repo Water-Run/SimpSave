@@ -1,6 +1,6 @@
-Metadata-Version: 2.1
+Metadata-Version: 2.2
 Name: simpsave
-Version: 2.2
+Version: 2.3
 Summary: SimpSave: Easy Python Basic Variable Persistence Library
 Home-page: https://github.com/Water-Run/SimpSave
 Author: WaterRun
@@ -10,6 +10,14 @@ Classifier: License :: OSI Approved :: MIT License
 Classifier: Operating System :: OS Independent
 Requires-Python: >=3.10
 Description-Content-Type: text/markdown
+Dynamic: author
+Dynamic: author-email
+Dynamic: classifier
+Dynamic: description
+Dynamic: description-content-type
+Dynamic: home-page
+Dynamic: requires-python
+Dynamic: summary
 
 # SimpSave  
 
@@ -20,7 +28,7 @@ SimpSave utilizes `.ini` files to store Python basic types in key-value pairs.
 - **Extremely Simple**: The project consists of fewer than 200 lines of code  
 - **Extremely Easy to Use**: It鈥檚 almost effortless to get started  
 - **Flexible and Free**: SimpSave has very few restrictions, allowing you to fully leverage Python's basic data structures  
-> This document applies to SimpSave version 2.2  
+> This document applies to SimpSave version 2.3  
 
 ## Installation  
 
@@ -50,8 +58,8 @@ This allows SimpSave to efficiently leverage Python's powerful built-in types li
 
 ## Usage Guide  
 
-> Version 2.1 update: The `file` parameter must now be explicitly declared in function calls   
-> > eg. `read('key1', file='1.ini')`
+> Version 2.2 update: The `file` parameter must now be explicitly declared in function calls   
+> > eg. `read('key1', file='1.ini')`  
  
 ### Writing  
 

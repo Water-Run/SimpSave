@@ -1,8 +1,8 @@
 """
 @file simpsave.py
 @author WaterRun
-@version 2.2
-@date 2025-03-01
+@version 2.3
+@date 2025-03-02
 @description Source code of simpsave project
 """
 
@@ -53,7 +53,7 @@ def _load_config(file: str) -> configparser.ConfigParser:
     :return: Loaded ConfigParser object
     :raise FileNotFoundError: If the file does not exist
     """
-    config = configparser.ConfigParser()
+    config = configparser.ConfigParser(interpolation=None)
     if not os.path.isfile(file):
         raise FileNotFoundError(f'The specified .ini file does not exist: {file}')
     config.read(file)
@@ -80,10 +80,10 @@ def write(key: str, value: any, *, file: str | None = None) -> bool:
         with open(file, 'w', encoding='utf-8') as new_file:
             new_file.write("")
 
-    config = configparser.ConfigParser()
+    config = configparser.ConfigParser(interpolation=None)
     config.read(file, encoding='utf-8')
     try:
-        escaped_value = str(value).replace('\n', '\\n').replace('=', '\\=').replace(':', '\\:')
+        escaped_value = str(value).encode('unicode-escape').decode('utf-8').replace('\n', '\\n').replace('=', '\\=').replace(':', '\\:')
         config[key] = {'value': str(escaped_value), 'type': value_type}
         with open(file, 'w') as configfile:
             config.write(configfile)
@@ -106,7 +106,7 @@ def read(key: str, *, file: str | None = None) -> any:
     config = _load_config(file)
     if key not in config:
         raise KeyError(f'Key {key} does not exist in file {file}')
-    value_str = config[key]['value'].replace('\\n', '\n').replace('\\=', '=').replace('\\:', ':')
+    value_str = bytes(config[key]['value'].replace('\\n', '\n').replace('\\=', '=').replace('\\:', ':').encode('utf-8')).decode('unicode-escape')
     type_str = config[key]['type']
     try:
         return {

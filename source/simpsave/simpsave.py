@@ -1,15 +1,15 @@
 """
 @file simpsave.py
 @author WaterRun
-@version 2.3
-@date 2025-03-02
+@version 2.4
+@date 2025-03-08
 @description Source code of simpsave project
 """
 
 import os
 import importlib.util
 import configparser
-import re as regex
+import re
 import ast
 
 
@@ -62,18 +62,37 @@ def _load_config(file: str) -> configparser.ConfigParser:
 
 def write(key: str, value: any, *, file: str | None = None) -> bool:
     r"""
-    Write data to the specified .ini file. If the .ini file does not exist, it will be created
+    Write data to the specified .ini file. If the .ini file does not exist, it will be created.
+    For lists or dictionaries, every element must also be a Python basic type.
     :param key: Key to write to
     :param value: Value to write
     :param file: Path to the .ini file
     :return: Whether the write was successful
-    :raise TypeError: If the value is not a basic type
+    :raise TypeError: If the value or its elements are not basic types
     :raise FileNotFoundError: If the specified .ini file does not exist
     """
+    def _validate_basic_type(value):
+        """
+        Helper function to validate if the value is a basic type.
+        Recursively checks lists and dictionaries.
+        """
+        basic_types = (int, float, str, bool, bytes, complex, list, tuple, set, frozenset, dict, type(None))
+        if isinstance(value, (list, tuple, set, frozenset)):
+            for item in value:
+                if not isinstance(item, basic_types):
+                    raise TypeError(f"All elements in {type(value).__name__} must be Python basic types.")
+                _validate_basic_type(item)  # Recursively validate nested structures
+        elif isinstance(value, dict):
+            for k, v in value.items():
+                if not isinstance(k, basic_types) or not isinstance(v, basic_types):
+                    raise TypeError("All keys and values in a dict must be Python basic types.")
+                _validate_basic_type(v)  # Recursively validate nested structures
+        elif not isinstance(value, basic_types):
+            raise TypeError(f"Value must be a Python basic type, got {type(value).__name__} instead.")
+
     file = _path_parser(file)
-    basic_types = (int, float, str, bool, bytes, complex, list, tuple, set, frozenset, dict, type(None))
-    if not isinstance(value, basic_types):
-        raise TypeError(f"simpsave only supports Python basic types, i.e. {basic_types}")
+    _validate_basic_type(value)  # Validate the value before proceeding
+
     value_type = type(value).__name__
 
     if not os.path.exists(file):
@@ -159,17 +178,17 @@ def remove(key: str, *, file: str | None = None) -> bool:
     return True
 
 
-def match(re: str = "", *, file: str | None = None) -> dict[str, any]:
+def match(regex: str = "", *, file: str | None = None) -> dict[str, any]:
     r"""
     Return key-value pairs that match the regular expression from the .ini file in the format {'key':..,'value':..}
-    :param re: Regular expression string
+    :param regex: Regular expression string
     :param file: Path to the .ini file
     :return: Dictionary of matched results
     :raise FileNotFoundError: If the specified .ini file does not exist
     """
     file = _path_parser(file)
     config = _load_config(file)
-    pattern = regex.compile(re)
+    pattern = re.compile(regex)
     result = {}
     for key in config.sections():
         if pattern.match(key):

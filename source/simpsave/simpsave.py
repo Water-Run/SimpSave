@@ -1,7 +1,7 @@
 """
 @file simpsave.py
 @author WaterRun
-@version 2.4
+@version 3.0
 @date 2025-03-08
 @description Source code of simpsave project
 """

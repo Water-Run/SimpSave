@@ -1,0 +1,24 @@
+# 忽略 Python 缓存文件夹
+__pycache__/
+
+# 忽略虚拟环境文件夹
+venv/
+env/
+
+# 忽略 PyCharm 项目文件
+.idea/
+
+# 忽略构建文件
+build/
+dist/
+*.egg-info/
+
+# 忽略日志文件
+*.log
+
+# 忽略临时文件
+*.tmp
+*.bak
+*.swp
+.DS_Store
+Thumbs.db

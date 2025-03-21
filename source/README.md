@@ -9,7 +9,7 @@ SimpSave is a lightweight Python library designed for simple and efficient data 
 - **Easy to Use**: Minimal setup and straightforward API for quick integration.
 - **Flexible and Lightweight**: Supports Python's basic data types and requires no external dependencies.
 
-> Compatible with SimpSave version 3.0.
+> Compatible with SimpSave version 3.1.
 
 ---
 

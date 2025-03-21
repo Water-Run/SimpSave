@@ -1,8 +1,8 @@
 """
 @file simpsave.py
 @author WaterRun
-@version 3.0
-@date 2025-03-08
+@version 3.1
+@date 2025-03-22
 @description Source code of simpsave project
 """
 
@@ -11,6 +11,7 @@ import importlib.util
 import configparser
 import re
 import ast
+import base64
 
 
 def _path_parser(path: str | None) -> str:
@@ -71,6 +72,7 @@ def write(key: str, value: any, *, file: str | None = None) -> bool:
     :raise TypeError: If the value or its elements are not basic types
     :raise FileNotFoundError: If the specified .ini file does not exist
     """
+
     def _validate_basic_type(value):
         """
         Helper function to validate if the value is a basic type.
@@ -101,8 +103,15 @@ def write(key: str, value: any, *, file: str | None = None) -> bool:
 
     config = configparser.ConfigParser(interpolation=None)
     config.read(file, encoding='utf-8')
+
     try:
-        escaped_value = str(value).encode('unicode-escape').decode('utf-8').replace('\n', '\\n').replace('=', '\\=').replace(':', '\\:')
+        if isinstance(value, bytes):
+            escaped_value = base64.b64encode(value).decode('utf-8')  # Encode bytes to base64 string
+        else:
+            escaped_value = str(value).encode('unicode-escape').decode('utf-8').replace('\n', '\\n').replace('=',
+                                                                                                             '\\=').replace(
+                ':', '\\:')
+
         config[key] = {'value': str(escaped_value), 'type': value_type}
         with open(file, 'w') as configfile:
             config.write(configfile)
@@ -125,15 +134,20 @@ def read(key: str, *, file: str | None = None) -> any:
     config = _load_config(file)
     if key not in config:
         raise KeyError(f'Key {key} does not exist in file {file}')
-    value_str = bytes(config[key]['value'].replace('\\n', '\n').replace('\\=', '=').replace('\\:', ':').encode('utf-8')).decode('unicode-escape')
+
+    value_str = bytes(
+        config[key]['value'].replace('\\n', '\n').replace('\\=', '=').replace('\\:', ':').encode('utf-8')).decode(
+        'unicode-escape')
     type_str = config[key]['type']
+
     try:
+        if type_str == 'bytes':
+            return base64.b64decode(value_str)  # Decode the base64 string back to bytes
         return {
             'int': int,
             'float': float,
             'str': str,
             'bool': lambda x: x == 'True',
-            'bytes': bytes,
             'complex': complex,
             'list': ast.literal_eval,
             'tuple': ast.literal_eval,

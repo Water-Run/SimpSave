@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setup(
     name='simpsave',  # 包名称
-    version='3.0',  # 当前版本号
+    version='3.1',  # 当前版本号
     install_requires=[],  # 依赖项列表
     packages=find_packages(),  # 自动发现包
     author='WaterRun',  # 作者名

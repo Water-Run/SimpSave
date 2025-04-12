@@ -1,8 +1,8 @@
 """
 @file simpsave.py
 @author WaterRun
-@version 3.1
-@date 2025-03-22
+@version 3.2
+@date 2025-04-12
 @description Source code of simpsave project
 """
 
@@ -12,6 +12,7 @@ import configparser
 import re
 import ast
 import base64
+from io import StringIO
 
 
 def _path_parser(path: str | None) -> str:
@@ -28,7 +29,7 @@ def _path_parser(path: str | None) -> str:
     if not (isinstance(path, str) and path.endswith('.ini')):
         raise ValueError("Path must be a string and must be a .ini file")
 
-    if path.startswith(':ss:'):  # Must be installed via pip
+    if path.startswith(':ss:'):
         spec = importlib.util.find_spec("simpsave")
         if spec is None:
             raise ImportError("When using the 'ss' directive, simpsave must be installed via pip")
@@ -37,10 +38,8 @@ def _path_parser(path: str | None) -> str:
         relative_path = path[len(':ss:'):]
         return os.path.join(simpsave_path, relative_path)
 
-    # Convert relative path to absolute path
     absolute_path = os.path.abspath(path)
 
-    # Validate path legality
     if not os.path.isfile(absolute_path) and not os.path.isdir(os.path.dirname(absolute_path)):
         raise ValueError(f"Invalid path in the system: {absolute_path}")
 
@@ -57,8 +56,30 @@ def _load_config(file: str) -> configparser.ConfigParser:
     config = configparser.ConfigParser(interpolation=None)
     if not os.path.isfile(file):
         raise FileNotFoundError(f'The specified .ini file does not exist: {file}')
-    config.read(file)
+    
+    with open(file, 'rb') as f:
+        content = f.read().decode('utf-8', errors='replace')
+    
+    config.read_file(StringIO(content))
     return config
+
+
+def _encode_key(key: str) -> str:
+    """
+    Encode key to handle non-UTF8 characters
+    :param key: Original key
+    :return: Encoded key
+    """
+    return key.encode('unicode-escape').decode('utf-8').replace('\n', '\\n').replace('=', '\\=').replace(':', '\\:')
+
+
+def _decode_key(encoded_key: str) -> str:
+    """
+    Decode key to restore original format
+    :param encoded_key: Encoded key
+    :return: Original key
+    """
+    return bytes(encoded_key.replace('\\n', '\n').replace('\\=', '=').replace('\\:', ':').encode('utf-8')).decode('unicode-escape')
 
 
 def write(key: str, value: any, *, file: str | None = None) -> bool:
@@ -83,40 +104,47 @@ def write(key: str, value: any, *, file: str | None = None) -> bool:
             for item in value:
                 if not isinstance(item, basic_types):
                     raise TypeError(f"All elements in {type(value).__name__} must be Python basic types.")
-                _validate_basic_type(item)  # Recursively validate nested structures
+                _validate_basic_type(item)
         elif isinstance(value, dict):
             for k, v in value.items():
                 if not isinstance(k, basic_types) or not isinstance(v, basic_types):
                     raise TypeError("All keys and values in a dict must be Python basic types.")
-                _validate_basic_type(v)  # Recursively validate nested structures
+                _validate_basic_type(v)
         elif not isinstance(value, basic_types):
             raise TypeError(f"Value must be a Python basic type, got {type(value).__name__} instead.")
 
     file = _path_parser(file)
-    _validate_basic_type(value)  # Validate the value before proceeding
+    _validate_basic_type(value)
 
     value_type = type(value).__name__
+    encoded_key = _encode_key(key)
 
     if not os.path.exists(file):
         with open(file, 'w', encoding='utf-8') as new_file:
             new_file.write("")
 
     config = configparser.ConfigParser(interpolation=None)
-    config.read(file, encoding='utf-8')
+    
+    if os.path.exists(file) and os.path.getsize(file) > 0:
+        try:
+            with open(file, 'rb') as f:
+                content = f.read().decode('utf-8', errors='replace')
+            config.read_file(StringIO(content))
+        except Exception:
+            pass
 
     try:
         if isinstance(value, bytes):
-            escaped_value = base64.b64encode(value).decode('utf-8')  # Encode bytes to base64 string
+            escaped_value = base64.b64encode(value).decode('utf-8')
         else:
-            escaped_value = str(value).encode('unicode-escape').decode('utf-8').replace('\n', '\\n').replace('=',
-                                                                                                             '\\=').replace(
-                ':', '\\:')
+            escaped_value = str(value).encode('unicode-escape').decode('utf-8').replace('\n', '\\n').replace('=', '\\=').replace(':', '\\:')
 
-        config[key] = {'value': str(escaped_value), 'type': value_type}
-        with open(file, 'w') as configfile:
+        config[encoded_key] = {'value': str(escaped_value), 'type': value_type}
+        
+        with open(file, 'w', encoding='utf-8') as configfile:
             config.write(configfile)
         return True
-    except IOError:
+    except Exception:
         return False
 
 
@@ -132,17 +160,24 @@ def read(key: str, *, file: str | None = None) -> any:
     """
     file = _path_parser(file)
     config = _load_config(file)
-    if key not in config:
+    
+    encoded_key = _encode_key(key)
+    
+    if key in config:
+        section = key
+    elif encoded_key in config:
+        section = encoded_key
+    else:
         raise KeyError(f'Key {key} does not exist in file {file}')
-
+    
     value_str = bytes(
-        config[key]['value'].replace('\\n', '\n').replace('\\=', '=').replace('\\:', ':').encode('utf-8')).decode(
+        config[section]['value'].replace('\\n', '\n').replace('\\=', '=').replace('\\:', ':').encode('utf-8')).decode(
         'unicode-escape')
-    type_str = config[key]['type']
+    type_str = config[section]['type']
 
     try:
         if type_str == 'bytes':
-            return base64.b64decode(value_str)  # Decode the base64 string back to bytes
+            return base64.b64decode(value_str)
         return {
             'int': int,
             'float': float,
@@ -170,8 +205,9 @@ def has(key: str, *, file: str | None = None) -> bool:
     """
     file = _path_parser(file)
     config = _load_config(file)
-
-    return key in config
+    
+    encoded_key = _encode_key(key)
+    return key in config or encoded_key in config
 
 
 def remove(key: str, *, file: str | None = None) -> bool:
@@ -184,10 +220,22 @@ def remove(key: str, *, file: str | None = None) -> bool:
     """
     file = _path_parser(file)
     config = _load_config(file)
-    if key not in config:
+    
+    encoded_key = _encode_key(key)
+    
+    section_to_remove = None
+    
+    if key in config:
+        section_to_remove = key
+    elif encoded_key in config:
+        section_to_remove = encoded_key
+    
+    if section_to_remove is None:
         return False
-    config.remove_section(key)
-    with open(file, 'w') as configfile:
+        
+    config.remove_section(section_to_remove)
+    
+    with open(file, 'w', encoding='utf-8') as configfile:
         config.write(configfile)
     return True
 
@@ -204,9 +252,13 @@ def match(regex: str = "", *, file: str | None = None) -> dict[str, any]:
     config = _load_config(file)
     pattern = re.compile(regex)
     result = {}
-    for key in config.sections():
-        if pattern.match(key):
-            result[key] = read(key, file=file)
+    
+    for section in config.sections():
+        original_key = _decode_key(section)
+            
+        if pattern.match(original_key):
+            result[original_key] = read(original_key, file=file)
+            
     return result
 
 
@@ -225,3 +277,4 @@ def delete(*, file: str | None = None) -> bool:
         return True
     except IOError:
         return False
+    

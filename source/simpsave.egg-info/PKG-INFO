@@ -1,6 +1,6 @@
 Metadata-Version: 2.4
 Name: simpsave
-Version: 3.1
+Version: 3.2
 Summary: A lightweight Python library for persisting basic variables using .ini files. Simple, fast, and ideal for small-scale data storage.
 Home-page: https://github.com/Water-Run/SimpSave
 Author: WaterRun
@@ -33,7 +33,7 @@ SimpSave is a lightweight Python library designed for simple and efficient data 
 - **Easy to Use**: Minimal setup and straightforward API for quick integration.
 - **Flexible and Lightweight**: Supports Python's basic data types and requires no external dependencies.
 
-> Compatible with SimpSave version 3.1.
+> Compatible with SimpSave version 3.2.
 
 ---
 

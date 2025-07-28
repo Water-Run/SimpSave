@@ -1,18 +1,15 @@
 """
 @file simpsave.py
 @author WaterRun
-@version 3.2
-@date 2025-04-12
-@description Source code of simpsave project
+@version 4.0
+@date 2025-07-28
+@description Source code of simpsave project (YAML version)
 """
 
 import os
 import importlib.util
-import configparser
 import re
-import ast
-import base64
-from io import StringIO
+import yaml
 
 
 def _path_parser(path: str | None) -> str:
@@ -24,16 +21,15 @@ def _path_parser(path: str | None) -> str:
     :raise ImportError: If using :ss: and not installed via pip
     """
     if path is None:
-        path = '__ss__.ini'
+        path = '__ss__.yml'
 
-    if not (isinstance(path, str) and path.endswith('.ini')):
-        raise ValueError("Path must be a string and must be a .ini file")
+    if not (isinstance(path, str) and path.endswith('.yml')):
+        raise ValueError("Path must be a string and must be a .yml file")
 
     if path.startswith(':ss:'):
         spec = importlib.util.find_spec("simpsave")
         if spec is None:
             raise ImportError("When using the 'ss' directive, simpsave must be installed via pip")
-
         simpsave_path = os.path.join(spec.submodule_search_locations[0])
         relative_path = path[len(':ss:'):]
         return os.path.join(simpsave_path, relative_path)
@@ -46,59 +42,39 @@ def _path_parser(path: str | None) -> str:
     return absolute_path
 
 
-def _load_config(file: str) -> configparser.ConfigParser:
+def _load_yaml(file: str) -> dict:
     r"""
-    Load the configuration file
-    :param file: Path to the configuration file
-    :return: Loaded ConfigParser object
+    Load the YAML file
+    :param file: Path to the YAML file
+    :return: Loaded dict object
     :raise FileNotFoundError: If the file does not exist
     """
-    config = configparser.ConfigParser(interpolation=None)
     if not os.path.isfile(file):
-        raise FileNotFoundError(f'The specified .ini file does not exist: {file}')
-    
-    with open(file, 'rb') as f:
-        content = f.read().decode('utf-8', errors='replace')
-    
-    config.read_file(StringIO(content))
-    return config
+        raise FileNotFoundError(f'The specified .yml file does not exist: {file}')
+    with open(file, 'r', encoding='utf-8') as f:
+        content = f.read()
+    data = yaml.safe_load(content)
+    return data if isinstance(data, dict) else {}
 
 
-def _encode_key(key: str) -> str:
-    """
-    Encode key to handle non-UTF8 characters
-    :param key: Original key
-    :return: Encoded key
-    """
-    return key.encode('unicode-escape').decode('utf-8').replace('\n', '\\n').replace('=', '\\=').replace(':', '\\:')
-
-
-def _decode_key(encoded_key: str) -> str:
-    """
-    Decode key to restore original format
-    :param encoded_key: Encoded key
-    :return: Original key
-    """
-    return bytes(encoded_key.replace('\\n', '\n').replace('\\=', '=').replace('\\:', ':').encode('utf-8')).decode('unicode-escape')
+def _dump_yaml(data: dict, file: str) -> None:
+    with open(file, 'w', encoding='utf-8') as f:
+        yaml.safe_dump(data, f, allow_unicode=True, sort_keys=False)
 
 
 def write(key: str, value: any, *, file: str | None = None) -> bool:
     r"""
-    Write data to the specified .ini file. If the .ini file does not exist, it will be created.
+    Write data to the specified .yml file. If the .yml file does not exist, it will be created.
     For lists or dictionaries, every element must also be a Python basic type.
     :param key: Key to write to
     :param value: Value to write
-    :param file: Path to the .ini file
+    :param file: Path to the .yml file
     :return: Whether the write was successful
     :raise TypeError: If the value or its elements are not basic types
-    :raise FileNotFoundError: If the specified .ini file does not exist
+    :raise FileNotFoundError: If the specified .yml file does not exist
     """
 
     def _validate_basic_type(value):
-        """
-        Helper function to validate if the value is a basic type.
-        Recursively checks lists and dictionaries.
-        """
         basic_types = (int, float, str, bool, bytes, complex, list, tuple, set, frozenset, dict, type(None))
         if isinstance(value, (list, tuple, set, frozenset)):
             for item in value:
@@ -117,32 +93,29 @@ def write(key: str, value: any, *, file: str | None = None) -> bool:
     _validate_basic_type(value)
 
     value_type = type(value).__name__
-    encoded_key = _encode_key(key)
 
     if not os.path.exists(file):
         with open(file, 'w', encoding='utf-8') as new_file:
             new_file.write("")
 
-    config = configparser.ConfigParser(interpolation=None)
-    
-    if os.path.exists(file) and os.path.getsize(file) > 0:
-        try:
-            with open(file, 'rb') as f:
-                content = f.read().decode('utf-8', errors='replace')
-            config.read_file(StringIO(content))
-        except Exception:
-            pass
-
     try:
-        if isinstance(value, bytes):
-            escaped_value = base64.b64encode(value).decode('utf-8')
-        else:
-            escaped_value = str(value).encode('unicode-escape').decode('utf-8').replace('\n', '\\n').replace('=', '\\=').replace(':', '\\:')
+        data = {}
+        if os.path.exists(file) and os.path.getsize(file) > 0:
+            try:
+                data = _load_yaml(file)
+            except Exception:
+                data = {}
 
-        config[encoded_key] = {'value': str(escaped_value), 'type': value_type}
-        
-        with open(file, 'w', encoding='utf-8') as configfile:
-            config.write(configfile)
+        if isinstance(value, set):
+            value = list(value)
+        elif isinstance(value, frozenset):
+            value = list(value)
+        elif isinstance(value, bytes):
+            value = list(value)  # store bytes as list of ints for YAML compatibility
+
+        data[key] = {'value': value, 'type': value_type}
+
+        _dump_yaml(data, file)
         return True
     except Exception:
         return False
@@ -150,122 +123,96 @@ def write(key: str, value: any, *, file: str | None = None) -> bool:
 
 def read(key: str, *, file: str | None = None) -> any:
     r"""
-    Read data from the specified .ini file for a given key
+    Read data from the specified .yml file for a given key
     :param key: Key to read from
-    :param file: Path to the .ini file
+    :param file: Path to the .yml file
     :return: The value after conversion (type casted)
-    :raise FileNotFoundError: If the specified .ini file does not exist
+    :raise FileNotFoundError: If the specified .yml file does not exist
     :raise KeyError: If the key does not exist in the file
     :raise ValueError: If the key is illegal
     """
     file = _path_parser(file)
-    config = _load_config(file)
-    
-    encoded_key = _encode_key(key)
-    
-    if key in config:
-        section = key
-    elif encoded_key in config:
-        section = encoded_key
-    else:
+    data = _load_yaml(file)
+    if key not in data:
         raise KeyError(f'Key {key} does not exist in file {file}')
-    
-    value_str = bytes(
-        config[section]['value'].replace('\\n', '\n').replace('\\=', '=').replace('\\:', ':').encode('utf-8')).decode(
-        'unicode-escape')
-    type_str = config[section]['type']
-
+    val = data[key]
+    value, type_str = val['value'], val['type']
     try:
         if type_str == 'bytes':
-            return base64.b64decode(value_str)
+            return bytes(value)
+        if type_str == 'set':
+            return set(value)
+        if type_str == 'frozenset':
+            return frozenset(value)
+        if type_str == 'NoneType':
+            return None
+        if type_str == 'bool':
+            return bool(value)
         return {
             'int': int,
             'float': float,
             'str': str,
-            'bool': lambda x: x == 'True',
             'complex': complex,
-            'list': ast.literal_eval,
-            'tuple': ast.literal_eval,
-            'set': ast.literal_eval,
-            'frozenset': ast.literal_eval,
-            'dict': ast.literal_eval,
-            'NoneType': lambda _: None,
-        }[type_str](value_str)
-    except (KeyError, ValueError):
-        raise ValueError(f'Unable to convert value {value_str} to type {type_str}')
+            'list': list,
+            'tuple': tuple,
+            'dict': dict,
+        }.get(type_str, lambda x: x)(value)
+    except Exception:
+        raise ValueError(f'Unable to convert value {value} to type {type_str}')
 
 
 def has(key: str, *, file: str | None = None) -> bool:
     r"""
-    Check if the specified key exists in the given .ini file.
+    Check if the specified key exists in the given .yml file.
     :param key: Key to check
-    :param file: Path to the .ini file
+    :param file: Path to the .yml file
     :return: True if the key exists, False otherwise
-    :raise FileNotFoundError: If the specified .ini file does not exist
+    :raise FileNotFoundError: If the specified .yml file does not exist
     """
     file = _path_parser(file)
-    config = _load_config(file)
-    
-    encoded_key = _encode_key(key)
-    return key in config or encoded_key in config
+    data = _load_yaml(file)
+    return key in data
 
 
 def remove(key: str, *, file: str | None = None) -> bool:
     r"""
-    Remove the specified key (entire section). Returns False if it doesn't exist
+    Remove the specified key (entire entry). Returns False if it doesn't exist
     :param key: Key to remove
-    :param file: Path to the .ini file
+    :param file: Path to the .yml file
     :return: Whether the removal was successful
-    :raise FileNotFoundError: If the specified .ini file does not exist
+    :raise FileNotFoundError: If the specified .yml file does not exist
     """
     file = _path_parser(file)
-    config = _load_config(file)
-    
-    encoded_key = _encode_key(key)
-    
-    section_to_remove = None
-    
-    if key in config:
-        section_to_remove = key
-    elif encoded_key in config:
-        section_to_remove = encoded_key
-    
-    if section_to_remove is None:
+    data = _load_yaml(file)
+    if key not in data:
         return False
-        
-    config.remove_section(section_to_remove)
-    
-    with open(file, 'w', encoding='utf-8') as configfile:
-        config.write(configfile)
+    data.pop(key)
+    _dump_yaml(data, file)
     return True
 
 
 def match(regex: str = "", *, file: str | None = None) -> dict[str, any]:
     r"""
-    Return key-value pairs that match the regular expression from the .ini file in the format {'key':..,'value':..}
+    Return key-value pairs that match the regular expression from the .yml file in the format {'key':..,'value':..}
     :param regex: Regular expression string
-    :param file: Path to the .ini file
+    :param file: Path to the .yml file
     :return: Dictionary of matched results
-    :raise FileNotFoundError: If the specified .ini file does not exist
+    :raise FileNotFoundError: If the specified .yml file does not exist
     """
     file = _path_parser(file)
-    config = _load_config(file)
+    data = _load_yaml(file)
     pattern = re.compile(regex)
     result = {}
-    
-    for section in config.sections():
-        original_key = _decode_key(section)
-            
-        if pattern.match(original_key):
-            result[original_key] = read(original_key, file=file)
-            
+    for k in data:
+        if pattern.match(k):
+            result[k] = read(k, file=file)
     return result
 
 
 def delete(*, file: str | None = None) -> bool:
     r"""
-    Delete the entire .ini file. Returns False if it doesn't exist
-    :param file: Path to the .ini file to delete
+    Delete the entire .yml file. Returns False if it doesn't exist
+    :param file: Path to the .yml file to delete
     :return: Whether the deletion was successful
     :raise IOError: If the delete failed
     """
@@ -277,4 +224,3 @@ def delete(*, file: str | None = None) -> bool:
         return True
     except IOError:
         return False
-    

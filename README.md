@@ -1,5 +1,5 @@
 # SimpSave: Simple Persistent Storage for Your Python Variables  
-SimpSave is an open-source, very simple library that uses `.ini` files to achieve persistent storage for basic type variables.  
+SimpSave is an open-source, very simple library that uses `.yml` files to achieve persistent storage for basic type variables.  
 Install SimpSave using `pip`:
 ```bash
 pip install simpsave

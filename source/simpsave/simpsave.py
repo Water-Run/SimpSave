@@ -1,15 +1,34 @@
 """
 @file simpsave.py
 @author WaterRun
-@version 4.0
-@date 2025-07-28
-@description Source code of simpsave project (YAML version)
+@version 10
+@date 2025-11-03
+@description Source code of simpsave project
 """
 
 import os
 import importlib.util
 import re
 import yaml
+from enum import Enum
+
+
+class Engine(Enum):
+    r"""
+    SimpSave支持的存储模式
+    """
+    INI = 'ini'
+    YML = 'yml'
+    JSON = 'json'
+    TOML = 'toml'
+    SQLITE = 'sqlite'
+    REDIS = 'redis'
+
+
+class SimpSaveError(Exception):
+    r"""
+    SimpSave通用异常
+    """
 
 
 def _path_parser(path: str | None) -> str:

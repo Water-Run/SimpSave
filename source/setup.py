@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setup(
     name='simpsave',
-    version='4.0',
+    version='10',
     install_requires=['PyYAML'],
     packages=find_packages(),
     author='WaterRun',

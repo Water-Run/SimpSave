@@ -1,0 +1,48 @@
+{
+  "timestamp": "2025-11-07T22:59:27.578967",
+  "baseline_engine": "JsonEngine (SIMP基准)",
+  "data_count": 5000,
+  "results": {
+    "JsonEngine (SIMP基准)": {
+      "write_time": 530.5848789215088,
+      "write_ops": 9.423562937118053,
+      "read_time": 208.6912932395935,
+      "read_ops": 23.95883375095874,
+      "data_count": 5000
+    },
+    "RedisEngine": {
+      "write_time": 1.3559861183166504,
+      "write_ops": 3687.3533825015147,
+      "read_time": 1.9703707695007324,
+      "read_ops": 2537.593470931838,
+      "data_count": 5000
+    },
+    "SqliteEngine": {
+      "write_time": 0.40354251861572266,
+      "write_ops": 12390.268111403891,
+      "read_time": 0.6890830993652344,
+      "read_ops": 7256.018910644988,
+      "data_count": 5000
+    }
+  },
+  "comparison": {
+    "JsonEngine (SIMP基准)": {
+      "write_speedup": 1.0,
+      "read_speedup": 1.0,
+      "write_percentage": 100.0,
+      "read_percentage": 100.0
+    },
+    "RedisEngine": {
+      "write_speedup": 391.29078959907645,
+      "read_speedup": 105.91473263302282,
+      "write_percentage": 39129.078959907645,
+      "read_percentage": 10591.473263302283
+    },
+    "SqliteEngine": {
+      "write_speedup": 1314.817781138853,
+      "read_speedup": 302.8535940466898,
+      "write_percentage": 131481.7781138853,
+      "read_percentage": 30285.35940466898
+    }
+  }
+}

@@ -6,7 +6,7 @@
 @description SimpSave package initialization
 """
 
-from .simpsave import (
+from .core import (
     engine,
     write,
     read,

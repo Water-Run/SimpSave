@@ -1,7 +1,7 @@
 """
-@file simpsave.py
+@file core.py
 @author WaterRun
-@version 10.1
+@version 10.0
 @date 2025-11-09
 @description Source code of simpsave project - Fixed string handling for XML/INI engines
 """

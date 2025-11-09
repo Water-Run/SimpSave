@@ -2,65 +2,62 @@
 
 ## Introduction
 
-**SimpSave** is a lightweight Python key-value database for persisting basic Python variables. It leverages Python's powerful native data structure support, making it extremely easy to use and ideal for small scripts such as student assignments.
-
-**SimpSave 10** is a major upgrade that introduces optional storage engines: engine wrappers for `sqlite` and `Redis` provide production-level capabilities for lightweight environments, while maintaining the original zero-dependency minimalist design for simple use cases.
+**SimpSave** is a lightweight Python key-value storage database for basic variable persistence, utilizing Python’s powerful built-in data structures. It follows a “read-and-use” style, making it extremely easy to use and perfect for small scripts such as student projects or configuration files.  
+**SimpSave 10** is a major upgrade that introduces optional storage engines. With an encapsulated `sqlite` engine, it even reaches production usability levels for lightweight scenarios (despite having no connection pool mechanism for its functional API). For minimal environments, optional dependencies preserve the original zero-dependency ultra-lightweight nature.
 
 ### Core Features
 
-- **Extremely Lightweight**: Core code is concise and efficient, with minimal installation requiring no dependencies
-- **Extremely Easy to Learn**: Functional API (`read()`, `write()`, etc.) is very intuitive with virtually no learning curve, ready to use immediately
+- **Extremely Lightweight**: Minimal and efficient core code; dependency-free minimal installation  
+- **Extremely Easy to Use**: Functional APIs (`read()`, `write()`, etc.) are straightforward with almost no learning curve  
   ```python
   import simpsave as ss
   ss.write('key1', 'value1')
   ss.read('key1')  # 'value1'
   ```
-- **Read-and-Use**: Stored types match retrieved types, no need for type checking or conversion, further simplifying usage
+- **Read-and-Use**: Stored and retrieved types remain consistent, with no need for manual type conversion  
   ```python
   import simpsave as ss
   ss.write('key1', 1)
   type(ss.read('key1')).__name__  # 'int'
   ss.read('key1') + 1  # 2
   ```
-- **Multi-Engine Support**: From the ultra-minimal dependency-free `SIMP` engine to production-grade `SQLITE` and `REDIS` engines. Automatically selects engine based on file extension, no manual configuration needed
+- **Multi-Engine Support**: From dependency-free lightweight `XML` engines to production-ready `SQLITE` engines. **SimpSave** automatically selects an engine based on file extension—no configuration required.  
 
 ## Installation
 
-**SimpSave** is published on [PyPI](https://pypi.org/project/simpsave/) and can be installed with `pip`:
+**SimpSave** is available on [PyPI](https://pypi.org/project/simpsave/). Install it using `pip`:  
 
 ```bash
 pip install simpsave
 ```
 
-Then import it in your project:
+Then, import it into your project:  
 
 ```python
-import simpsave as ss  # Commonly aliased as 'ss'
+import simpsave as ss  # commonly aliased as 'ss'
 ```
 
-You're ready to start using it.
+And you’re ready to use it.  
 
 ### Optional Dependencies
 
-**SimpSave** supports optional dependencies based on your needs:
+**SimpSave** supports optional dependencies so you can install only what you need:  
 
 ```bash
-pip install simpsave                # Install all dependencies
-pip install simpsave[SIMP]          # Minimal: SIMP engine only (no dependencies)
-pip install simpsave[INI]           # SIMP and INI engines (no dependencies)
-pip install simpsave[XML]           # SIMP and XML engines (requires xml.etree)
-pip install simpsave[YML]           # SIMP and YML engines (requires PyYAML)
-pip install simpsave[TOML]          # SIMP and TOML engines (requires tomli)
-pip install simpsave[JSON]          # SIMP and JSON engines (no dependencies)
-pip install simpsave[SQLITE]        # SIMP and SQLITE engines (requires sqlite3)
-pip install simpsave[REDIS]         # SIMP and REDIS engines (requires redis-py)
+pip install simpsave                # Install with all engines
+pip install simpsave[XML]           # Minimal: XML engine only (requires xml.etree)
+pip install simpsave[INI]           # XML + INI engines (no external dependencies)
+pip install simpsave[YML]           # XML + YML engines (requires PyYAML)
+pip install simpsave[TOML]          # XML + TOML engines (requires tomli)
+pip install simpsave[JSON]          # XML + JSON engines (no external dependencies)
+pip install simpsave[SQLITE]        # XML + SQLITE engines (requires sqlite3)
 ```
 
-> The `SQLITE` engine requires SQLite to be deployed locally; the `REDIS` engine requires a Redis service to be running
+> The `SQLITE` engine requires an existing SQLite environment installed locally.  
 
 ## Quick Start Example
 
-The following code provides a quick start example for **SimpSave**:
+Below is a simple example to get started with **SimpSave**:  
 
 ```python
 import simpsave as ss
@@ -75,142 +72,142 @@ print(ss.read('name'))     # Alice
 print(ss.read('age'))      # 25
 print(ss.read('scores'))   # [90, 85, 92]
 
-# Check keys
+# Check key existence
 print(ss.has('name'))      # True
 print(ss.has('email'))     # False
 
-# Remove keys
+# Delete a key
 ss.remove('age')
 print(ss.has('age'))       # False
 
-# Regular expression matching
+# Regex match
 ss.write('user_admin', True)
 ss.write('user_guest', False)
 print(ss.match(r'^user_'))  # {'user_admin': True, 'user_guest': False}
 
-# Use different files (automatically selects corresponding engine)
+# Use a different file (engine auto-selected)
 ss.write('theme', 'dark', file='config.yml')
 print(ss.read('theme', file='config.yml'))  # dark
 
-# Use :ss: mode (saves to installation directory)
-ss.write('key1', 'value1', file=':ss:config.yml')
-print(ss.read('key1', file=':ss:config.yml'))  # value1
+# Use :ss: mode (stored in installation directory)
+ss.write('key1', 'value1', file=':ss:config.toml')
+print(ss.read('key1', file=':ss:config.toml'))  # value1
 
-# Delete files
+# Delete storage files
 ss.delete()
 ss.delete(file='config.yml')
 ```
 
-If you have some programming background, **SimpSave's** intuitive design should have you up and running in no time.
+If you have basic programming knowledge, you’ll master **SimpSave** almost instantly.  
 
 ## Engines
 
-**SimpSave 10** supports multiple storage engines that can be selected based on your needs. Engines are stored in the `ss.ENGINE` enum:
+**SimpSave 10** supports multiple storage engines, selectable per use case. Each engine is defined in the `ss.ENGINE` enumeration:  
 
-| Engine Name | File Format | Write Performance Benchmark | Read Performance Benchmark | Dependencies | Description |
-|-------------|-------------|----------------------------|---------------------------|--------------|-------------|
-| `SIMP` | `.simpsave` | Fast | Fast | None | Simplest engine, uses custom plain text files with no external dependencies |
-| `INI` | `.ini` | Fast | Fast | `configparser` (built-in) | Uses INI format storage, not fully `Unicode` compatible |
-| `XML` | `.xml` | Medium | Medium | `xml.etree` (built-in) | Uses XML format storage |
-| `YML` | `.yml` | Medium | Medium | `PyYAML` | Uses YAML format storage |
-| `TOML` | `.toml` | Fast | Fast | `tomli` | Uses TOML format storage |
-| `JSON` | `.json` | Fast | Fast | `json` (built-in) | Uses JSON format storage |
-| `SQLITE` | `.db` | Very Fast | Very Fast | `sqlite3` (built-in) | Uses SQLite database with production-grade performance |
-| `REDIS` | Memory | Extremely Fast | Extremely Fast | `redis-py` | Uses Redis in-memory database with production-grade performance |
-
-> Test benchmark: `Fedora 43`, `i7-13620H`, `16GB DDR5`, `SN740 1TB`
+| Engine | File Format | Dependency | Description |
+|---------|--------------|-------------|-------------|
+| `XML` | `.xml` | `xml.etree` (built-in) | Stores data in XML format; lightweight, dependency-free |
+| `INI` | `.ini` | `configparser` (built-in) | Stores data in INI format; limited Unicode support |
+| `YML` | `.yml` | `PyYAML` | YAML format storage |
+| `TOML` | `.toml` | `tomli` | TOML format storage |
+| `JSON` | `.json` | `json` (built-in) | JSON format storage |
+| `SQLITE` | `.db` | `sqlite3` (built-in) | SQLite database; production-level performance |
 
 ### Automatic Engine Selection
 
-**SimpSave** automatically selects the appropriate engine based on the file extension in the `file` parameter:
+**SimpSave** automatically chooses an engine based on the file extension provided to `file`:  
 
 ```python
 import simpsave as ss
 
-ss.write('key1', 'value1', file='data.yml')     # Automatically uses YML engine
-ss.write('key2', 'value2', file='config.toml')  # Automatically uses TOML engine
-ss.write('key3', 'value3', file='data.db')      # Automatically uses SQLITE engine
+ss.write('key1', 'value1', file='data.yml')     # Uses YML engine
+ss.write('key2', 'value2', file='config.toml')  # Uses TOML engine
+ss.write('key3', 'value3', file='data.db')      # Uses SQLITE engine
 ```
 
-If no file is specified or the extension is unrecognized, the default `SIMP` engine is used with filename `__ss__.simpsave`
+## Mechanism
 
-## How It Works
+**SimpSave** stores Python’s built-in basic data types as key-value pairs. The actual data format varies based on the selected engine.  
 
-**SimpSave** stores Python basic type data in key-value format. Depending on the selected engine, data is stored in different formats.
+> By default, data is saved to `__ss__.xml` in the current working directory.  
 
-> By default, data is saved to the `__ss__.simpsave` file in the current working directory
+### `:ss:` Mode  
 
-### `:ss:` Mode
-
-Like previous versions, **SimpSave** retains support for the unique `:ss:` path mode: if the file path starts with `:ss:` (e.g., `:ss:config.yml`), the file will be saved in the **SimpSave** installation directory, ensuring cross-environment compatibility.
+As in earlier versions, **SimpSave** supports the unique `:ss:` path prefix—files with `:ss:` (e.g., `:ss:config.json`) are stored in the **SimpSave** installation directory, ensuring cross-environment compatibility.  
 
 ```python
 import simpsave as ss
 
-ss.write('key1', 'value1', file=':ss:config.yml')  # Save to SimpSave installation directory
-print(ss.read('key1', file=':ss:config.yml'))      # Read from installation directory
+ss.write('key1', 'value1', file=':ss:config.yml')
+print(ss.read('key1', file=':ss:config.yml'))
 ```
 
-> `:ss:` mode requires SimpSave to be installed via `pip`
+> `:ss:` mode is available only when SimpSave is installed via `pip`.  
 
-### Data Types
+### Supported Data Types
 
-**SimpSave** fully supports Python's built-in basic types, including:
+**SimpSave** fully supports Python’s basic built-in types, including:  
 
 - `int`
 - `float`
 - `str`
 - `bool`
-- `list`
+- `list` (including nested lists of basic types)
 - `dict`
 - `tuple`
 - `None`
 
-When reading data, **SimpSave** automatically restores it to its original `Python` type, achieving "read-and-use" functionality.
+When read back, data automatically restores to its original Python type—providing genuine “read-and-use” capability.  
 
 ## API Reference
 
-### Writing Data
+### Write Data
 
-The `write` function writes key-value pairs to a specified file:
+`write` writes a key-value pair into the specified file:  
 
 ```python
 def write(key: str, value: any, *, file: str | None = None) -> bool:
     ...
 ```
 
+If the file doesn’t exist, it will be created automatically.  
+
 #### Parameters
 
-- `key`: The key to store, must be a valid string
-- `value`: The value to store, supports Python basic types
-- `file`: The file path to write to, defaults to `__ss__.simpsave`, can use `:ss:` mode. Engine is automatically selected based on file extension
+- `key`: The key to save (string only)
+- `value`: The value to store (any supported Python base type)
+- `file`: Target file path; defaults to `__ss__.xml`. Supports `:ss:` mode. Engine is auto-selected by extension.  
 
 #### Return Value
 
-- Returns `True` on success, `False` on failure
+- Returns `True` on success, `False` on failure.  
+
+#### Exceptions
+
+- `ValueError`: Value is not a supported Python base type  
+- `IOError`: Write operation failed  
+- `RuntimeError`: Other runtime errors (e.g., engine not installed)  
 
 #### Example
 
 ```python
 import simpsave as ss
 
-ss.write('key1', 'Hello 世界')           # Write Unicode string
-ss.write('key2', 3.14)                  # Write float
-ss.write('key3', [1, 2, 3, '中文'])      # Write list with Chinese characters
-ss.write('key4', {'a': 1, 'b': 2})      # Write dictionary
+ss.write('key1', 'Hello World')
+ss.write('key2', 3.14)
+ss.write('key3', [1, 2, 3, 'Text'])
+ss.write('key4', {'a': 1, 'b': 2})
 
-# Use different engines
-ss.write('config', 'value', file='settings.yml')   # Use YML engine
-ss.write('data', 100, file='cache.db')             # Use SQLITE engine
+# Different engines
+ss.write('config', 'value', file='settings.yml')  # YML engine
+ss.write('data', 100, file='cache.db')            # SQLITE engine
 ```
 
-> If the file doesn't exist, SimpSave creates it automatically
+> Files are created automatically if missing.  
 
----
+### Read Data
 
-### Reading Data
-
-The `read` function reads data from a specified file:
+`read` reads data from a specified file:  
 
 ```python
 def read(key: str, *, file: str | None = None) -> any:
@@ -219,32 +216,34 @@ def read(key: str, *, file: str | None = None) -> any:
 
 #### Parameters
 
-- `key`: The key name to read
-- `file`: The file path to read from, defaults to `__ss__.simpsave`
+- `key`: Key name to read  
+- `file`: File path to read from (defaults to `__ss__.xml`)  
 
 #### Return Value
 
-* Returns the value corresponding to the specified key, automatically restored to its original type
-* Returns `None` if the key doesn't exist
+- Returns the value associated with the key (restored to its original type).  
+- Returns `None` if the key does not exist.  
+
+#### Exceptions
+
+- `IOError`: Read error  
+- `RuntimeError`: Engine error or missing dependency  
 
 #### Example
 
 ```python
 import simpsave as ss
 
-print(ss.read('key1'))  # Output: 'Hello 世界'
-print(ss.read('key2'))  # Output: 3.14
-print(ss.read('key3'))  # Output: [1, 2, 3, '中文']
+print(ss.read('key1'))
+print(ss.read('key2'))
+print(ss.read('key3'))
 
-# Read from different files
 value = ss.read('config', file='settings.yml')
 ```
 
----
+### Check for Key Existence
 
-### Checking Key Existence
-
-The `has` function checks if a key exists in a file:
+`has` checks if a given key exists in the file:  
 
 ```python
 def has(key: str, *, file: str | None = None) -> bool:
@@ -253,27 +252,30 @@ def has(key: str, *, file: str | None = None) -> bool:
 
 #### Parameters
 
-- `key`: The key name to check
-- `file`: The file path to check, defaults to `__ss__.simpsave`
+- `key`: Key name to check  
+- `file`: File path (defaults to `__ss__.xml`)  
 
 #### Return Value
 
-* Returns `True` if key exists, `False` otherwise
+- Returns `True` if the key exists, otherwise `False`.  
+
+#### Exceptions
+
+- `IOError`: Read error  
+- `RuntimeError`: Engine error  
 
 #### Example
 
 ```python
 import simpsave as ss
 
-print(ss.has('key1'))        # Output: True
-print(ss.has('nonexistent')) # Output: False
+print(ss.has('key1'))
+print(ss.has('nonexistent'))
 ```
 
----
+### Remove a Key
 
-### Removing Keys
-
-The `remove` function deletes a key and its corresponding value from a file:
+`remove` deletes a key and its associated value:  
 
 ```python
 def remove(key: str, *, file: str | None = None) -> bool:
@@ -282,27 +284,30 @@ def remove(key: str, *, file: str | None = None) -> bool:
 
 #### Parameters
 
-- `key`: The key name to remove
-- `file`: The file path to operate on, defaults to `__ss__.simpsave`
+- `key`: Key to delete  
+- `file`: Target file (defaults to `__ss__.xml`)  
 
 #### Return Value
 
-* Returns `True` on successful deletion, `False` on failure
+- Returns `True` on success, `False` on failure.  
+
+#### Exceptions
+
+- `IOError`: Write error  
+- `RuntimeError`: Engine error  
 
 #### Example
 
 ```python
 import simpsave as ss
 
-ss.remove('key1')  # Remove key 'key1'
-print(ss.has('key1'))  # Output: False
+ss.remove('key1')
+print(ss.has('key1'))  # False
 ```
 
----
+### Regex Match Keys
 
-### Regular Expression Key Matching
-
-The `match` function matches all keys using a regular expression and returns corresponding key-value pairs:
+`match` returns key-value pairs that match a regular expression:  
 
 ```python
 def match(re: str = "", *, file: str | None = None) -> dict[str, any]:
@@ -311,12 +316,17 @@ def match(re: str = "", *, file: str | None = None) -> dict[str, any]:
 
 #### Parameters
 
-- `re`: Regular expression string for matching key names. Empty string matches all keys
-- `file`: The file path to operate on, defaults to `__ss__.simpsave`
+- `re`: Regular expression string (empty = all keys)  
+- `file`: File path (defaults to `__ss__.xml`)  
 
 #### Return Value
 
-- Returns a dictionary containing all matched key-value pairs
+- Returns a dictionary of all matched key-value pairs.  
+
+#### Exceptions
+
+- `IOError`: Read error  
+- `RuntimeError`: Engine error  
 
 #### Example
 
@@ -327,18 +337,13 @@ ss.write('user_name', 'Alice')
 ss.write('user_age', 25)
 ss.write('admin_name', 'Bob')
 
-result = ss.match(r'^user_.*')  # Match all keys starting with 'user_'
-print(result)  # Output: {'user_name': 'Alice', 'user_age': 25}
-
-all_data = ss.match()  # Get all key-value pairs
-print(all_data)
+result = ss.match(r'^user_.*')
+print(result)
 ```
 
----
+### Delete File
 
-### Deleting Files
-
-The `delete` function deletes an entire storage file:
+`delete` removes the entire storage file:  
 
 ```python
 def delete(*, file: str | None = None) -> bool:
@@ -347,35 +352,120 @@ def delete(*, file: str | None = None) -> bool:
 
 #### Parameters
 
-- `file`: The file path to delete, defaults to `__ss__.simpsave`
+- `file`: File path to delete (defaults to `__ss__.xml`)  
 
 #### Return Value
 
-- Returns `True` on successful deletion, `False` on failure
+- Returns `True` on success, `False` on failure.  
+
+#### Exceptions
+
+- `IOError`: Delete error  
+- `RuntimeError`: Engine error  
 
 #### Example
 
 ```python
 import simpsave as ss
 
-ss.delete()  # Delete the default save file
-ss.delete(file='config.yml')  # Delete specified file
+ss.delete()
+ss.delete(file='config.yml')
 ```
 
----
+## Exception Handling
 
-## Note: Using the REDIS Engine
+**SimpSave** may raise the following exceptions. Understanding them helps you write more robust code.  
 
-The `REDIS` engine stores data in memory, which is lost on power loss. Ensure Redis service is running before use
+### Common Exception Types
+
+#### `ValueError`
+
+Raised when attempting to store non-basic Python types.  
+
+**Examples:**  
 
 ```python
 import simpsave as ss
 
-# Use REDIS engine (file parameter is used as Redis key prefix)
-ss.write('key1', 'value1', file='redis://localhost:6379/0')
-print(ss.read('key1', file='redis://localhost:6379/0'))
+class CustomClass:
+    pass
+
+try:
+    ss.write('key1', CustomClass())
+except ValueError as e:
+    print(f"Error: {e}")
 ```
 
-The `REDIS` engine requires the `redis-py` dependency: `pip install simpsave[REDIS]`
+#### `IOError`
 
-> Learn more at [GitHub](https://github.com/Water-Run/SimpSave)  
+Raised when file read/write operations fail.  
+
+**Examples:**  
+
+```python
+import simpsave as ss
+
+try:
+    ss.read('key1', file='/root/protected.db')
+except IOError as e:
+    print(f"File I/O error: {e}")
+```
+
+#### `RuntimeError`
+
+Raised for engine or runtime-related issues.  
+
+**Examples:**  
+
+```python
+import simpsave as ss
+
+try:
+    ss.write('key1', 'value1', file='data.unknown')
+except RuntimeError as e:
+    print(f"Runtime error: {e}")
+```
+
+### Best Practices for Exception Handling
+
+Use `try-except` to safely handle operations:  
+
+```python
+import simpsave as ss
+
+# Safe write
+try:
+    ss.write('key1', 'value1')
+except ValueError as e:
+    print(f"Invalid value type: {e}")
+except IOError as e:
+    print(f"Write failed: {e}")
+except RuntimeError as e:
+    print(f"Runtime error: {e}")
+
+# Safe read
+try:
+    value = ss.read('key1')
+    if value is None:
+        print("Key does not exist")
+except IOError as e:
+    print(f"Read failed: {e}")
+except RuntimeError as e:
+    print(f"Runtime error: {e}")
+```
+
+## Practical Tips  
+
+1. For non-`SQLITE` engines, keep data size and complexity under control.  
+2. Always use `has()` or `try-except` checks before reading:  
+    ```python
+    import simpsave as ss
+    value = 'default'
+    if ss.has('key_1'):
+        value = ss.read('key_1')
+    else:
+        ss.write('key_1', 'default')
+    ```
+    - When file existence is uncertain, use initialization inside `try-except`.  
+
+> For more information, visit [GitHub](https://github.com/Water-Run/SimpSave)

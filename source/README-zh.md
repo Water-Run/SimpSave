@@ -2,8 +2,8 @@
 
 ## 简介
 
-**SimpSave**是一个Python羽量级键值对Python基本变量存储数据库, 利用了`Python`原生强大的数据结构支持, 极其简易上手, 很适合用于各种小型脚本如学生作业中.  
-**SimpSave 10**是一次重大升级, 带来了可选引擎的能力: 对`sqlite`和`Redis`的引擎封装提供,使其在某些轻量级生产环境也具备了可用水平; 而对于简易环境中的使用, 可选依赖也可保持原先的0依赖极简特性.
+**SimpSave**是一个Python羽量级键值对Python基本变量存储数据库, 利用了`Python`原生强大的数据结构支持, "即读即用", 极其简易上手, 很适合用于各种小型脚本如学生作业中, 或作为配置文件等使用.  
+**SimpSave 10**是一次重大升级, 带来了可选引擎的能力: 对`sqlite`的引擎封装提供,使其在某些轻量级生产环境也具备了可用水平(尽管函数式的API无连接池机制); 而对于简易环境中的使用, 可选依赖也可保持原先的0依赖极简特性.
 
 ### 核心特点
 
@@ -21,7 +21,7 @@
   type(ss.read('key1')).__name__  # 'int'
   ss.read('key1') + 1  # 2
   ```
-- **多引擎支持**: 从无任何依赖的极简 `SIMP` 引擎, 到具备生产性能的 `SQLITE` 和 `REDIS` 引擎. 根据文件后缀自动选择引擎, 无需手动配置  
+- **多引擎支持**: 从无任何依赖的轻量级 `XML` 引擎, 到具备生产性能的 `SQLITE` 引擎. **SimpSave**根据文件后缀自动选择引擎, 无需手动配置  
 
 ## 安装
 
@@ -45,21 +45,19 @@ import simpsave as ss  # 通常别名为 'ss'
 
 ```bash
 pip install simpsave                # 安装全部依赖
-pip install simpsave[SIMP]          # 最小化: 仅包含 SIMP 引擎（无依赖）
-pip install simpsave[INI]           # 包含 SIMP 和 INI 引擎（无依赖）
-pip install simpsave[XML]           # 包含 SIMP 和 XML 引擎（需要 xml.etree）
-pip install simpsave[YML]           # 包含 SIMP 和 YML 引擎（需要 PyYAML）
-pip install simpsave[TOML]          # 包含 SIMP 和 TOML 引擎（需要 tomli）
-pip install simpsave[JSON]          # 包含 SIMP 和 JSON 引擎（无依赖）
-pip install simpsave[SQLITE]        # 包含 SIMP 和 SQLITE 引擎（需要 sqlite3）
-pip install simpsave[REDIS]         # 包含 SIMP 和 REDIS 引擎（需要 redis-py）
+pip install simpsave[XML]           # 最小化: 仅包含 XML 引擎（需要 xml.etree）
+pip install simpsave[INI]           # 包含 XML 和 INI 引擎（无额外依赖）
+pip install simpsave[YML]           # 包含 XML 和 YML 引擎（需要 PyYAML）
+pip install simpsave[TOML]          # 包含 XML 和 TOML 引擎（需要 tomli）
+pip install simpsave[JSON]          # 包含 XML 和 JSON 引擎（无额外依赖）
+pip install simpsave[SQLITE]        # 包含 XML 和 SQLITE 引擎（需要 sqlite3）
 ```
 
-> `SQLITE` 引擎需要在本机上提前部署 `SQLite` 环境；`REDIS` 引擎需要在本机上提前部署 `Redis` 服务  
+> `SQLITE` 引擎需要在本机上提前部署 `SQLite` 环境  
 
 ## 快速上手示例
 
-以下代码提供了 **SimpSave** 快速上手示例: 
+以下代码提供了 **SimpSave** 快速上手示例:  
 
 ```python
 import simpsave as ss
@@ -92,8 +90,8 @@ ss.write('theme', 'dark', file='config.yml')
 print(ss.read('theme', file='config.yml'))  # dark
 
 # 使用 :ss: 模式（保存到安装目录）
-ss.write('key1', 'value1', file=':ss:config.yml')
-print(ss.read('key1', file=':ss:config.yml'))  # value1
+ss.write('键1', '值1', file=':ss:config.toml') # 使用中文键名和TOML引擎
+print(ss.read('键1', file=':ss:config.toml'))  # 值1
 
 # 删除文件
 ss.delete()
@@ -104,20 +102,16 @@ ss.delete(file='config.yml')
 
 ## 引擎
 
-**SimpSave 10** 支持多种存储引擎, 可根据实际需求选择.引擎存储在 `ss.ENGINE` 枚举中: 
+**SimpSave 10** 支持多种存储引擎, 可根据实际需求选择.引擎存储在 `ss.ENGINE` 枚举中:  
 
-| 引擎名称 | 文件格式 | 写入性能基准 | 读取性能基准 | 依赖 | 说明 |
-|---------|---------|---------|---------|------|------|
-| `SIMP` | `.simpsave` | 快 | 快 | 无 | 最简易的引擎, 使用自定义的纯文本文件, 无任何外部依赖 |
-| `INI` | `.ini` | 快 | 快 | `configparser`（内置） | 使用 INI 格式存储, 不完全兼容 `Unicode` |
-| `XML` | `.xml` | 中 | 中 | `xml.etree`（内置） | 使用 XML 格式存储 |
-| `YML` | `.yml` | 中 | 中 | `PyYAML` | 使用 YAML 格式存储 |
-| `TOML` | `.toml` | 快 | 快 | `tomli` | 使用 TOML 格式存储 |
-| `JSON` | `.json` | 快 | 快 | `json`（内置） | 使用 JSON 格式存储 |
-| `SQLITE` | `.db` | 非常快 | 非常快 | `sqlite3`（内置） | 使用 SQLite 数据库, 具备生产级性能 |
-| `REDIS` | 内存 | 极快 | 极快 | `redis-py` | 使用 Redis 内存数据库, 具备生产级性能 |
-
-> 测试基准: `Fedora 43`, `i7-13620H`, `16GB DDR5`, `SN740 1TB`  
+| 引擎名称 | 文件格式 | 依赖 | 说明 |
+|---------|---------|------|------|
+| `XML` | `.xml` | `xml.etree`（内置） | 使用 XML 格式存储, 轻量级且无需额外依赖 |
+| `INI` | `.ini` | `configparser`（内置） | 使用 INI 格式存储, 不完全兼容 `Unicode` |
+| `YML` | `.yml` | `PyYAML` | 使用 YAML 格式存储 |
+| `TOML` | `.toml` | `tomli` | 使用 TOML 格式存储 |
+| `JSON` | `.json` | `json`（内置） | 使用 JSON 格式存储 |
+| `SQLITE` | `.db` | `sqlite3`（内置） | 使用 SQLite 数据库, 具备生产级性能 |
 
 ### 自动引擎选择
 
@@ -131,17 +125,15 @@ ss.write('key2', 'value2', file='config.toml')  # 自动使用 TOML 引擎
 ss.write('key3', 'value3', file='data.db')      # 自动使用 SQLITE 引擎
 ```
 
-如果未指定文件或后缀无法识别, 默认使用 `SIMP` 引擎, 文件名为 `__ss__.simpsave`  
-
 ## 原理
 
 **SimpSave** 使用键值对（key-value）的形式保存 Python 的基础类型数据. 根据选择的引擎不同, 数据会以不同的格式存储.  
 
-> 默认情况下, 数据保存到当前工作目录下的 `__ss__.simpsave` 文件中  
+> 默认情况下, 数据保存到当前工作目录下的 `__ss__.xml` 文件中  
 
 ### `:ss:` 模式  
 
-与旧版相同, **SimpSave** 保留支持独特的 `:ss:` 路径模式: 如果文件路径以 `:ss:` 开头(如 `:ss:config.yml`), 文件会被保存在 **SimpSave** 的安装目录中, 从而保证跨环境兼容性.  
+与旧版相同, **SimpSave** 保留支持独特的 `:ss:` 路径模式: 如果文件路径以 `:ss:` 开头(如 `:ss:config.json`), 文件会被保存在 **SimpSave** 的安装目录中, 从而保证跨环境兼容性.  
 
 ```python
 import simpsave as ss
@@ -160,7 +152,7 @@ print(ss.read('key1', file=':ss:config.yml'))      # 从安装目录读取
 - `float`
 - `str`
 - `bool`
-- `list`
+- `list`(包括嵌套, 嵌套内的项也需要是`Python`的基础类型数据, 下同)
 - `dict`
 - `tuple`
 - `None`
@@ -178,15 +170,23 @@ def write(key: str, value: any, *, file: str | None = None) -> bool:
     ...
 ```
 
+如果指定的存储文件不存在, 会自动进行创建.  
+
 #### 参数说明
 
 - `key`: 要存储的键, 必须是合法的字符串
 - `value`: 要存储的值, 支持 Python 基础类型
-- `file`: 要写入的文件路径, 默认为 `__ss__.simpsave`, 可使用 `:ss:` 模式. 引擎会根据文件后缀自动选择  
+- `file`: 要写入的文件路径, 默认为 `__ss__.xml`, 可使用 `:ss:` 模式. 引擎会根据文件后缀自动选择  
 
 #### 返回值
 
 - 成功写入返回 `True`, 失败返回 `False`.
+
+#### 异常  
+
+- `ValueError`: 值非Python基本类型的值  
+- `IOError`: 写入错误  
+- `RuntimeError`: 其它运行时错误, 如所选引擎未安装等  
 
 #### 示例
 
@@ -205,8 +205,6 @@ ss.write('data', 100, file='cache.db')             # 使用 SQLITE 引擎
 
 > 如果文件不存在, SimpSave 会自动创建.
 
----
-
 ### 读取数据
 
 `read` 函数用于从指定文件中读取数据:  
@@ -219,12 +217,17 @@ def read(key: str, *, file: str | None = None) -> any:
 #### 参数说明
 
 - `key`: 要读取的键名.
-- `file`: 要读取的文件路径, 默认为 `__ss__.simpsave`.
+- `file`: 要读取的文件路径, 默认为 `__ss__.xml`.
 
 #### 返回值
 
-* 返回指定键对应的值, 并自动恢复为原始类型.
-* 如果键不存在, 返回 `None`.
+- 返回指定键对应的值, 并自动恢复为原始类型.
+- 如果键不存在, 返回 `None`.
+
+#### 异常  
+
+- `IOError`: 读取错误  
+- `RuntimeError`: 其它运行时错误, 如所选引擎未安装等  
 
 #### 示例
 
@@ -239,8 +242,6 @@ print(ss.read('key3'))  # 输出: [1, 2, 3, '中文']
 value = ss.read('config', file='settings.yml')
 ```
 
----
-
 ### 检查键是否存在
 
 `has` 函数用于检测某个键是否存在于文件中:  
@@ -253,11 +254,16 @@ def has(key: str, *, file: str | None = None) -> bool:
 #### 参数说明
 
 - `key`: 要检查的键名.
-- `file`: 要检查的文件路径, 默认为 `__ss__.simpsave`.
+- `file`: 要检查的文件路径, 默认为 `__ss__.xml`.
 
 #### 返回值
 
-* 键存在返回 `True`, 不存在返回 `False`.
+- 键存在返回 `True`, 不存在返回 `False`.
+
+#### 异常  
+
+- `IOError`: 读取错误  
+- `RuntimeError`: 其它运行时错误, 如所选引擎未安装等  
 
 #### 示例
 
@@ -267,8 +273,6 @@ import simpsave as ss
 print(ss.has('key1'))        # 输出: True
 print(ss.has('nonexistent')) # 输出: False
 ```
-
----
 
 ### 删除键
 
@@ -282,11 +286,16 @@ def remove(key: str, *, file: str | None = None) -> bool:
 #### 参数说明
 
 - `key`: 要删除的键名.
-- `file`: 要操作的文件路径, 默认为 `__ss__.simpsave`.
+- `file`: 要操作的文件路径, 默认为 `__ss__.xml`.
 
 #### 返回值
 
-* 成功删除返回 `True`, 失败返回 `False`.
+- 成功删除返回 `True`, 失败返回 `False`.
+
+#### 异常  
+
+- `IOError`: 写入错误  
+- `RuntimeError`: 其它运行时错误, 如所选引擎未安装等  
 
 #### 示例
 
@@ -296,8 +305,6 @@ import simpsave as ss
 ss.remove('key1')  # 删除键 'key1'
 print(ss.has('key1'))  # 输出: False
 ```
-
----
 
 ### 正则匹配键
 
@@ -311,11 +318,16 @@ def match(re: str = "", *, file: str | None = None) -> dict[str, any]:
 #### 参数说明
 
 - `re`: 正则表达式字符串, 用于匹配键名.空字符串表示匹配所有键.
-- `file`: 要操作的文件路径, 默认为 `__ss__.simpsave`.
+- `file`: 要操作的文件路径, 默认为 `__ss__.xml`.
 
 #### 返回值
 
 - 返回一个字典, 包含所有匹配的键值对.
+
+#### 异常  
+
+- `IOError`: 读取错误  
+- `RuntimeError`: 其它运行时错误, 如所选引擎未安装等  
 
 #### 示例
 
@@ -333,8 +345,6 @@ all_data = ss.match()  # 获取所有键值对
 print(all_data)
 ```
 
----
-
 ### 删除文件
 
 `delete` 函数可删除整个存储文件:  
@@ -346,11 +356,16 @@ def delete(*, file: str | None = None) -> bool:
 
 #### 参数说明
 
-- `file`: 要删除的文件路径, 默认为 `__ss__.simpsave`.
+- `file`: 要删除的文件路径, 默认为 `__ss__.xml`.
 
 #### 返回值
 
 - 成功删除返回 `True`, 失败返回 `False`.
+
+#### 异常  
+
+- `IOError`: 删除错误  
+- `RuntimeError`: 其它运行时错误, 如所选引擎未安装等  
 
 #### 示例
 
@@ -361,20 +376,118 @@ ss.delete()  # 删除默认的保存文件
 ss.delete(file='config.yml')  # 删除指定文件
 ```
 
----
+## 异常处理
 
-## 注: 使用 REDIS 引擎
+**SimpSave** 在运行过程中可能会抛出以下异常, 了解这些异常有助于编写更健壮的代码.  
 
-`REDIS` 引擎将数据存储在内存中, 断电即失. 使用前需要确保 Redis 服务已启动  
+### 常见异常类型
+
+#### `ValueError`
+
+当传入的值不是 Python 基本类型时抛出.  
+
+**触发场景:**  
+
+- 尝试存储不支持的复杂对象(如自定义类实例、函数等)
+- 传入的值超出引擎支持的类型范围
+
+**示例:**  
 
 ```python
 import simpsave as ss
 
-# 使用 REDIS 引擎（文件参数会被用作 Redis 键前缀）
-ss.write('key1', 'value1', file='redis://localhost:6379/0')
-print(ss.read('key1', file='redis://localhost:6379/0'))
+class CustomClass:
+    pass
+
+try:
+    ss.write('key1', CustomClass())  # 抛出 ValueError
+except ValueError as e:
+    print(f"错误: {e}")
 ```
 
-`REDIS` 引擎需要安装 `redis-py` 依赖: `pip install simpsave[REDIS]`  
+#### `IOError`
 
-> 了解更多, 访问 [GitHub](https://github.com/Water-Run/SimpSave)  
+文件读写操作失败时抛出.  
+
+**触发场景:**  
+
+- 文件权限不足
+- 磁盘空间不足
+- 文件被其他进程占用
+- 文件路径不存在或无效
+
+**示例:**  
+
+```python
+import simpsave as ss
+
+try:
+    ss.read('key1', file='/root/protected.db')  # 可能抛出 IOError
+except IOError as e:
+    print(f"文件操作错误: {e}")
+```
+
+#### `RuntimeError`
+
+其他运行时错误, 通常是引擎内部错误或配置问题.  
+
+**触发场景:**  
+
+- 引擎初始化失败
+- 数据格式损坏
+- 依赖库缺失或版本不兼容
+
+**示例:**  
+
+```python
+import simpsave as ss
+
+try:
+    ss.write('key1', 'value1', file='data.unknown')  # 可能抛出 RuntimeError
+except RuntimeError as e:
+    print(f"运行时错误: {e}")
+```
+
+### 异常处理最佳实践
+
+推荐使用 `try-except` 语句处理可能的异常:  
+
+```python
+import simpsave as ss
+
+# 安全写入
+try:
+    ss.write('key1', 'value1')
+except ValueError as e:
+    print(f"值类型错误: {e}")
+except IOError as e:
+    print(f"文件写入失败: {e}")
+except RuntimeError as e:
+    print(f"运行时错误: {e}")
+
+# 安全读取
+try:
+    value = ss.read('key1')
+    if value is None:
+        print("键不存在")
+except IOError as e:
+    print(f"文件读取失败: {e}")
+except RuntimeError as e:
+    print(f"运行时错误: {e}")
+```
+
+## 实践建议  
+
+1. 使用非`SQLITE`引擎时, 控制数据量和复杂度;  
+2. 在读取数据之前, 使用`has`或`try-except`语句安全读取:
+    ```python
+    import simpsave as ss
+    value = 'default value'
+    if ss.has('key_1'):
+        value = ss.read('key_1')
+    else:
+        ss.write('key_1', 'default value')
+    ```
+    - 无法确认对应文件是否存在时,使用`try-except`结合初始化语句.  
+
+> 了解更多, 访问 [GitHub](https://github.com/Water-Run/SimpSave)

@@ -3,7 +3,7 @@
 @author WaterRun
 @version 10.0
 @date 2025-11-09
-@description Source code of simpsave project - Fixed string handling for XML/INI engines
+@description Source code of simpsave project - Fixed engine selection and removed REDIS
 """
 
 import os
@@ -14,41 +14,104 @@ import xml.etree.ElementTree as ET
 from typing import Any
 
 
-_ENGINE: str = "XML"
+def _get_extension_for_file(file: str | None) -> str:
+    r"""
+    Get file extension from file path
+    :param file: File path
+    :return: File extension without dot (e.g., 'xml', 'json')
+    :raise ValueError: If file has no extension or invalid extension
+    """
+    if file is None:
+        return 'xml'
+    
+    if not isinstance(file, str):
+        raise ValueError("File path must be a string")
+    
+    # Handle :ss: prefix
+    if file.startswith(':ss:'):
+        file = file[len(':ss:'):]
+    
+    # Extract extension
+    if '.' not in file:
+        raise ValueError(f"File path must have an extension: {file}")
+    
+    ext = file.rsplit('.', 1)[1].lower()
+    
+    # Validate extension
+    valid_extensions = {'xml', 'ini', 'json', 'yml', 'yaml', 'toml', 'db'}
+    if ext not in valid_extensions:
+        raise ValueError(f"Unsupported file extension: .{ext}. Valid extensions: {valid_extensions}")
+    
+    # Normalize yaml to yml
+    if ext == 'yaml':
+        ext = 'yml'
+    
+    return ext
 
 
-def _path_parser(path: str | None, extension: str) -> str:
+def _get_engine_from_extension(extension: str) -> str:
+    r"""
+    Get engine name from file extension
+    :param extension: File extension (e.g., 'xml', 'json')
+    :return: Engine name (e.g., 'XML', 'JSON')
+    """
+    extension_to_engine = {
+        'xml': 'XML',
+        'ini': 'INI',
+        'json': 'JSON',
+        'yml': 'YML',
+        'toml': 'TOML',
+        'db': 'SQLITE'
+    }
+    return extension_to_engine.get(extension, 'XML')
+
+
+def _path_parser(file: str | None, engine: str) -> str:
     r"""
     Handle and convert paths
-    :param path: Path to be processed
-    :param extension: Expected file extension
+    :param file: Path to be processed
+    :param engine: Engine name to determine default extension
     :return: Processed path
     :raise ValueError: If the path is not a string or is invalid
     :raise ImportError: If using :ss: and not installed via pip
     """
-    if path is None:
-        path = f'__ss__.{extension}'
-
-    if not isinstance(path, str):
+    engine_to_extension = {
+        'XML': 'xml',
+        'INI': 'ini',
+        'JSON': 'json',
+        'YML': 'yml',
+        'TOML': 'toml',
+        'SQLITE': 'db'
+    }
+    
+    extension = engine_to_extension.get(engine, 'xml')
+    
+    if file is None:
+        file = f'__ss__.{extension}'
+    
+    if not isinstance(file, str):
         raise ValueError("Path must be a string")
-
-    if not path.endswith(f'.{extension}'):
-        raise ValueError(f"Path must be a .{extension} file")
-
-    if path.startswith(':ss:'):
+    
+    # Validate extension matches engine
+    file_ext = _get_extension_for_file(file)
+    expected_ext = engine_to_extension.get(engine, 'xml')
+    if file_ext != expected_ext:
+        raise ValueError(f"File extension '.{file_ext}' does not match engine '{engine}' (expected '.{expected_ext}')")
+    
+    if file.startswith(':ss:'):
         spec = importlib.util.find_spec("simpsave")
         if spec is None:
             raise ImportError("When using the 'ss' directive, simpsave must be installed via pip")
         simpsave_path = os.path.join(spec.submodule_search_locations[0])
-        relative_path = path[len(':ss:'):]
+        relative_path = file[len(':ss:'):]
         return os.path.join(simpsave_path, relative_path)
-
-    absolute_path = os.path.abspath(path)
+    
+    absolute_path = os.path.abspath(file)
     parent_dir = os.path.dirname(absolute_path)
     
     if parent_dir and not os.path.isdir(parent_dir):
         raise ValueError(f"Invalid path in the system: {absolute_path}")
-
+    
     return absolute_path
 
 
@@ -407,116 +470,12 @@ def _sqlite_remove(key: str, file: str) -> bool:
     return rows_affected > 0
 
 
-def _redis_connect(host: str, port: int):
-    r"""
-    Connect to Redis server
-    :param host: Redis host
-    :param port: Redis port
-    :return: Redis connection
-    :raise RuntimeError: If redis module is not available
-    """
-    try:
-        import redis
-    except ImportError:
-        raise RuntimeError("REDIS engine requires the 'redis' package. Install with: pip install simpsave[redis]")
-    
-    return redis.Redis(host=host, port=port, decode_responses=True)
-
-
-def _redis_write(key: str, value: Any, value_type: str, host: str = 'localhost', port: int = 6379) -> None:
-    r"""
-    Write a key-value pair to Redis
-    :param key: Key to write
-    :param value: Value to write
-    :param value_type: Type name of the value
-    :param host: Redis host
-    :param port: Redis port
-    """
-    json_value = _python_to_json_compatible(value)
-    
-    r = _redis_connect(host, port)
-    value_blob = json.dumps({'value': json_value, 'type': value_type}, ensure_ascii=False)
-    r.set(key, value_blob)
-
-
-def _redis_read(key: str, host: str = 'localhost', port: int = 6379) -> dict[str, Any]:
-    r"""
-    Read a key from Redis
-    :param key: Key to read
-    :param host: Redis host
-    :param port: Redis port
-    :return: Dictionary with 'value' and 'type' keys
-    :raise KeyError: If the key does not exist
-    """
-    r = _redis_connect(host, port)
-    value_blob = r.get(key)
-    if value_blob is None:
-        raise KeyError(f'Key {key} does not exist in Redis')
-    return json.loads(value_blob)
-
-
-def _redis_has(key: str, host: str = 'localhost', port: int = 6379) -> bool:
-    r"""
-    Check if a key exists in Redis
-    :param key: Key to check
-    :param host: Redis host
-    :param port: Redis port
-    :return: True if the key exists, False otherwise
-    """
-    r = _redis_connect(host, port)
-    return r.exists(key) > 0
-
-
-def _redis_remove(key: str, host: str = 'localhost', port: int = 6379) -> bool:
-    r"""
-    Remove a key from Redis
-    :param key: Key to remove
-    :param host: Redis host
-    :param port: Redis port
-    :return: Whether the removal was successful
-    """
-    r = _redis_connect(host, port)
-    return r.delete(key) > 0
-
-
-def _redis_match(regex: str, host: str = 'localhost', port: int = 6379) -> dict[str, Any]:
-    r"""
-    Match keys in Redis using a regular expression
-    :param regex: Regular expression string
-    :param host: Redis host
-    :param port: Redis port
-    :return: Dictionary of matched results
-    """
-    r = _redis_connect(host, port)
-    pattern = re.compile(regex)
-    result = {}
-    for key in r.scan_iter():
-        if pattern.match(key):
-            result[key] = read(key, host=host, port=port)
-    return result
-
-
-def engine(name: str = "XML") -> None:
-    r"""
-    Set the storage engine for SimpSave
-    :param name: Engine name (XML, INI, JSON, YML, TOML, SQLITE, REDIS)
-    :raise ValueError: If the engine name is invalid
-    """
-    global _ENGINE
-    valid_engines = {"XML", "INI", "JSON", "YML", "TOML", "SQLITE", "REDIS"}
-    if name.upper() not in valid_engines:
-        raise ValueError(f"Invalid engine name: {name}. Valid options: {valid_engines}")
-    _ENGINE = name.upper()
-
-
-def write(key: str, value: Any, *, file: str | None = None, host: str = 'localhost', port: int = 6379) -> bool:
+def write(key: str, value: Any, *, file: str | None = None) -> bool:
     r"""
     Write data to the storage backend
     :param key: Key to write to
     :param value: Value to write
-    :param file: Path to the storage file (for file-based engines)
-    :param host: Redis host (for REDIS engine)
-    :param port: Redis port (for REDIS engine)
+    :param file: Path to the storage file (engine auto-selected by extension)
     :return: Whether the write was successful
     """
     try:
@@ -527,22 +486,21 @@ def write(key: str, value: Any, *, file: str | None = None, host: str = 'localho
     value_type = type(value).__name__
     
     try:
-        if _ENGINE == "REDIS":
-            _redis_write(key, value, value_type, host, port)
+        # Determine engine from file extension
+        extension = _get_extension_for_file(file)
+        engine = _get_engine_from_extension(extension)
+        
+        # Parse path with determined engine
+        parsed_file = _path_parser(file, engine)
+        
+        if engine == "SQLITE":
+            _sqlite_write(key, value, value_type, parsed_file)
             return True
         
-        if _ENGINE == "SQLITE":
-            file = _path_parser(file, 'db')
-            _sqlite_write(key, value, value_type, file)
-            return True
-        
-        extensions = {"XML": "xml", "INI": "ini", "JSON": "json", "YML": "yml", "TOML": "toml"}
-        ext = extensions[_ENGINE]
-        file = _path_parser(file, ext)
-        
-        if not os.path.exists(file):
-            with open(file, 'w', encoding='utf-8') as new_file:
-                if _ENGINE == "XML":
+        # Create file if it doesn't exist
+        if not os.path.exists(parsed_file):
+            with open(parsed_file, 'w', encoding='utf-8') as new_file:
+                if engine == "XML":
                     new_file.write('<?xml version="1.0" encoding="utf-8"?>\n<simpsave></simpsave>')
                 else:
                     new_file.write("")
@@ -551,15 +509,15 @@ def write(key: str, value: Any, *, file: str | None = None, host: str = 'localho
         dump_funcs = {"XML": _xml_dump, "INI": _ini_dump, "JSON": _json_dump, "YML": _yml_dump, "TOML": _toml_dump}
         
         data = {}
-        if os.path.exists(file) and os.path.getsize(file) > 0:
+        if os.path.exists(parsed_file) and os.path.getsize(parsed_file) > 0:
             try:
-                data = load_funcs[_ENGINE](file)
+                data = load_funcs[engine](parsed_file)
             except Exception:
                 data = {}
         
         json_value = _python_to_json_compatible(value)
         
-        if _ENGINE == "XML" or _ENGINE == "INI":
+        if engine == "XML" or engine == "INI":
             data[key] = {
                 'value': json.dumps(json_value, ensure_ascii=False, separators=(',', ':')), 
                 'type': value_type
@@ -567,51 +525,47 @@ def write(key: str, value: Any, *, file: str | None = None, host: str = 'localho
         else:
             data[key] = {'value': json_value, 'type': value_type}
         
-        dump_funcs[_ENGINE](data, file)
+        dump_funcs[engine](data, parsed_file)
         return True
     except Exception:
         return False
 
 
-def read(key: str, *, file: str | None = None, host: str = 'localhost', port: int = 6379) -> Any:
+def read(key: str, *, file: str | None = None) -> Any:
     r"""
     Read data from the storage backend
     :param key: Key to read from
-    :param file: Path to the storage file (for file-based engines)
-    :param host: Redis host (for REDIS engine)
-    :param port: Redis port (for REDIS engine)
+    :param file: Path to the storage file (engine auto-selected by extension)
     :return: The value after conversion
     :raise FileNotFoundError: If the specified file does not exist
     :raise KeyError: If the key does not exist
     :raise ValueError: If unable to convert the value
     """
-    if _ENGINE == "REDIS":
-        val = _redis_read(key, host, port)
-        python_value = _json_compatible_to_python(val['value'])
-        return python_value
-    elif _ENGINE == "SQLITE":
-        file = _path_parser(file, 'db')
-        data = _sqlite_load(file)
+    # Determine engine from file extension
+    extension = _get_extension_for_file(file)
+    engine = _get_engine_from_extension(extension)
+    
+    # Parse path with determined engine
+    parsed_file = _path_parser(file, engine)
+    
+    if engine == "SQLITE":
+        data = _sqlite_load(parsed_file)
         if key not in data:
-            raise KeyError(f'Key {key} does not exist in file {file}')
+            raise KeyError(f'Key {key} does not exist in file {parsed_file}')
         val = data[key]
         python_value = _json_compatible_to_python(val['value'])
         return python_value
     else:
-        extensions = {"XML": "xml", "INI": "ini", "JSON": "json", "YML": "yml", "TOML": "toml"}
-        ext = extensions[_ENGINE]
-        file = _path_parser(file, ext)
-        
         load_funcs = {"XML": _xml_load, "INI": _ini_load, "JSON": _json_load, "YML": _yml_load, "TOML": _toml_load}
-        data = load_funcs[_ENGINE](file)
+        data = load_funcs[engine](parsed_file)
         
         if key not in data:
-            raise KeyError(f'Key {key} does not exist in file {file}')
+            raise KeyError(f'Key {key} does not exist in file {parsed_file}')
         val = data[key]
     
     value, type_str = val['value'], val['type']
     
-    if _ENGINE == "XML" or _ENGINE == "INI":
+    if engine == "XML" or engine == "INI":
         try:
             json_value = json.loads(value)
             python_value = _json_compatible_to_python(json_value)
@@ -626,106 +580,91 @@ def read(key: str, *, file: str | None = None, host: str = 'localhost', port: in
         raise ValueError(f'Unable to convert value to type {type_str}: {e}')
 
 
-def has(key: str, *, file: str | None = None, host: str = 'localhost', port: int = 6379) -> bool:
+def has(key: str, *, file: str | None = None) -> bool:
     r"""
     Check if a key exists in the storage backend
     :param key: Key to check
-    :param file: Path to the storage file (for file-based engines)
-    :param host: Redis host (for REDIS engine)
-    :param port: Redis port (for REDIS engine)
+    :param file: Path to the storage file (engine auto-selected by extension)
     :return: True if the key exists, False otherwise
     :raise FileNotFoundError: If the specified file does not exist
     """
-    if _ENGINE == "REDIS":
-        return _redis_has(key, host, port)
+    # Determine engine from file extension
+    extension = _get_extension_for_file(file)
+    engine = _get_engine_from_extension(extension)
     
-    if _ENGINE == "SQLITE":
-        file = _path_parser(file, 'db')
-        if not os.path.isfile(file):
-            raise FileNotFoundError(f'The specified .db file does not exist: {file}')
-        data = _sqlite_load(file)
+    # Parse path with determined engine
+    parsed_file = _path_parser(file, engine)
+    
+    if not os.path.isfile(parsed_file):
+        raise FileNotFoundError(f'The specified .{extension} file does not exist: {parsed_file}')
+    
+    if engine == "SQLITE":
+        data = _sqlite_load(parsed_file)
         return key in data
     
-    extensions = {"XML": "xml", "INI": "ini", "JSON": "json", "YML": "yml", "TOML": "toml"}
-    ext = extensions[_ENGINE]
-    file = _path_parser(file, ext)
-    
-    if not os.path.isfile(file):
-        raise FileNotFoundError(f'The specified .{ext} file does not exist: {file}')
-    
     load_funcs = {"XML": _xml_load, "INI": _ini_load, "JSON": _json_load, "YML": _yml_load, "TOML": _toml_load}
-    data = load_funcs[_ENGINE](file)
+    data = load_funcs[engine](parsed_file)
     
     return key in data
 
 
-def remove(key: str, *, file: str | None = None, host: str = 'localhost', port: int = 6379) -> bool:
+def remove(key: str, *, file: str | None = None) -> bool:
     r"""
     Remove a key from the storage backend
     :param key: Key to remove
-    :param file: Path to the storage file (for file-based engines)
-    :param host: Redis host (for REDIS engine)
-    :param port: Redis port (for REDIS engine)
+    :param file: Path to the storage file (engine auto-selected by extension)
     :return: Whether the removal was successful
     :raise FileNotFoundError: If the specified file does not exist
     """
-    if _ENGINE == "REDIS":
-        return _redis_remove(key, host, port)
+    # Determine engine from file extension
+    extension = _get_extension_for_file(file)
+    engine = _get_engine_from_extension(extension)
     
-    if _ENGINE == "SQLITE":
-        file = _path_parser(file, 'db')
-        if not os.path.isfile(file):
-            raise FileNotFoundError(f'The specified .db file does not exist: {file}')
-        return _sqlite_remove(key, file)
+    # Parse path with determined engine
+    parsed_file = _path_parser(file, engine)
     
-    extensions = {"XML": "xml", "INI": "ini", "JSON": "json", "YML": "yml", "TOML": "toml"}
-    ext = extensions[_ENGINE]
-    file = _path_parser(file, ext)
+    if not os.path.isfile(parsed_file):
+        raise FileNotFoundError(f'The specified .{extension} file does not exist: {parsed_file}')
     
-    if not os.path.isfile(file):
-        raise FileNotFoundError(f'The specified .{ext} file does not exist: {file}')
+    if engine == "SQLITE":
+        return _sqlite_remove(key, parsed_file)
     
     load_funcs = {"XML": _xml_load, "INI": _ini_load, "JSON": _json_load, "YML": _yml_load, "TOML": _toml_load}
     dump_funcs = {"XML": _xml_dump, "INI": _ini_dump, "JSON": _json_dump, "YML": _yml_dump, "TOML": _toml_dump}
     
-    data = load_funcs[_ENGINE](file)
+    data = load_funcs[engine](parsed_file)
     
     if key not in data:
         return False
     
     data.pop(key)
-    dump_funcs[_ENGINE](data, file)
+    dump_funcs[engine](data, parsed_file)
     return True
 
 
-def match(regex: str = "", *, file: str | None = None, host: str = 'localhost', port: int = 6379) -> dict[str, Any]:
+def match(regex: str = "", *, file: str | None = None) -> dict[str, Any]:
     r"""
     Return key-value pairs that match the regular expression
     :param regex: Regular expression string
-    :param file: Path to the storage file (for file-based engines)
-    :param host: Redis host (for REDIS engine)
-    :param port: Redis port (for REDIS engine)
+    :param file: Path to the storage file (engine auto-selected by extension)
     :return: Dictionary of matched results
     :raise FileNotFoundError: If the specified file does not exist
     """
-    if _ENGINE == "REDIS":
-        return _redis_match(regex, host, port)
+    # Determine engine from file extension
+    extension = _get_extension_for_file(file)
+    engine = _get_engine_from_extension(extension)
     
-    if _ENGINE == "SQLITE":
-        file = _path_parser(file, 'db')
-        if not os.path.isfile(file):
-            raise FileNotFoundError(f'The specified .db file does not exist: {file}')
-        data = _sqlite_load(file)
+    # Parse path with determined engine
+    parsed_file = _path_parser(file, engine)
+    
+    if not os.path.isfile(parsed_file):
+        raise FileNotFoundError(f'The specified .{extension} file does not exist: {parsed_file}')
+    
+    if engine == "SQLITE":
+        data = _sqlite_load(parsed_file)
     else:
-        extensions = {"XML": "xml", "INI": "ini", "JSON": "json", "YML": "yml", "TOML": "toml"}
-        ext = extensions[_ENGINE]
-        file = _path_parser(file, ext)
-        
-        if not os.path.isfile(file):
-            raise FileNotFoundError(f'The specified .{ext} file does not exist: {file}')
-        
         load_funcs = {"XML": _xml_load, "INI": _ini_load, "JSON": _json_load, "YML": _yml_load, "TOML": _toml_load}
-        data = load_funcs[_ENGINE](file)
+        data = load_funcs[engine](parsed_file)
     
     pattern = re.compile(regex)
     result = {}
@@ -738,25 +677,24 @@ def match(regex: str = "", *, file: str | None = None, host: str = 'localhost', 
 def delete(*, file: str | None = None) -> bool:
     r"""
     Delete the storage file
-    :param file: Path to the storage file to delete
+    :param file: Path to the storage file to delete (engine auto-selected by extension)
     :return: Whether the deletion was successful
     """
-    if _ENGINE == "REDIS":
-        return False
-    
-    extensions = {"XML": "xml", "INI": "ini", "JSON": "json", "YML": "yml", "TOML": "toml", "SQLITE": "db"}
-    ext = extensions[_ENGINE]
-    
     try:
-        file = _path_parser(file, ext)
+        # Determine engine from file extension
+        extension = _get_extension_for_file(file)
+        engine = _get_engine_from_extension(extension)
+        
+        # Parse path with determined engine
+        parsed_file = _path_parser(file, engine)
     except ValueError:
         return False
     
-    if not os.path.isfile(file):
+    if not os.path.isfile(parsed_file):
         return False
     
     try:
-        os.remove(file)
+        os.remove(parsed_file)
         return True
     except (IOError, OSError):
         return False

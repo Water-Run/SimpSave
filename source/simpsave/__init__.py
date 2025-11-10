@@ -1,13 +1,12 @@
 """
 @file __init__.py
 @author WaterRun
-@version 10.0
-@date 2025-11-09
+@version 10.1
+@date 2025-11-10
 @description SimpSave package initialization
 """
 
 from .core import (
-    engine,
     write,
     read,
     has,
@@ -19,7 +18,6 @@ from .core import (
 __version__ = "10.0.0"
 __author__ = "WaterRun"
 __all__ = [
-    "engine",
     "write",
     "read",
     "has",

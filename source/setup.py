@@ -1,8 +1,8 @@
 """
 @file setup.py
 @author WaterRun
-@version 10.0
-@date 2025-11-09
+@version 10.1
+@date 2025-11-10
 @description Setup configuration for SimpSave
 """
 
@@ -13,7 +13,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setup(
     name='simpsave',
-    version='10.0.0',
+    version='10.1.0',
     packages=find_packages(where='.'),  
     package_dir={'': '.'},              
     author='WaterRun',
